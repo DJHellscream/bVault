@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
@@ -52,9 +53,29 @@ abstract contract ERC4626Fees is ERC4626 {
         address to,
         uint256 value
     ) public virtual override(ERC20, IERC20) returns (bool) {
-        uint256 fee = _feeOnTotal(value, _entryFeeBasisPoints());
-        
-        return super.transfer(to, value);
+        uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
+        address recipient = _transferFeeRecipient();
+
+        if (fee > 0) {
+            super.transfer(recipient, fee);
+        }
+
+        return super.transfer(to, value - fee);
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) public virtual override(ERC20, IERC20) returns (bool) {
+        uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
+        address recipient = _transferFeeRecipient();
+
+        if (fee > 0) {
+            super.transferFrom(from, recipient, fee);
+        }
+
+        return super.transferFrom(from, to, value - fee);
     }
 
     /// @dev Send entry fee to {_entryFeeRecipient}. See {IERC4626-_deposit}.
@@ -102,11 +123,19 @@ abstract contract ERC4626Fees is ERC4626 {
         return 0; // replace with e.g. 100 for 1%
     }
 
+    function _transferFeeBasisPoints() internal view virtual returns (uint256) {
+        return 0; // replace with e.g. 100 for 1%
+    }
+
     function _entryFeeRecipient() internal view virtual returns (address) {
         return address(0); // replace with e.g. a treasury address
     }
 
     function _exitFeeRecipient() internal view virtual returns (address) {
+        return address(0); // replace with e.g. a treasury address
+    }
+
+    function _transferFeeRecipient() internal view virtual returns (address) {
         return address(0); // replace with e.g. a treasury address
     }
 

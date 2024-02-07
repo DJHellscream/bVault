@@ -13,16 +13,6 @@
 						"type": "address"
 					},
 					{
-						"internalType": "uint256",
-						"name": "_entryBasisPoints",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_exitBasisPoints",
-						"type": "uint256"
-					},
-					{
 						"internalType": "address",
 						"name": "treasuryAddress",
 						"type": "address"
@@ -253,6 +243,11 @@
 					}
 				],
 				"name": "OwnableUnauthorizedAccount",
+				"type": "error"
+			},
+			{
+				"inputs": [],
+				"name": "ReentrancyGuardReentrantCall",
 				"type": "error"
 			},
 			{
@@ -573,12 +568,38 @@
 			},
 			{
 				"inputs": [],
+				"name": "entryFeeTreasury",
+				"outputs": [
+					{
+						"internalType": "address payable",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "exitFeeBasisPoints",
 				"outputs": [
 					{
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "exitFeeTreasury",
+				"outputs": [
+					{
+						"internalType": "address payable",
+						"name": "",
+						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -823,6 +844,84 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_newEntryFeeBasisPoints",
+						"type": "uint256"
+					}
+				],
+				"name": "setEntryFeeBasisPoints",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "entryFeeRecipient",
+						"type": "address"
+					}
+				],
+				"name": "setEntryFeeRecipient",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_newExitFeeBasisPoints",
+						"type": "uint256"
+					}
+				],
+				"name": "setExitFeeBasisPoints",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "exitFeeRecipient",
+						"type": "address"
+					}
+				],
+				"name": "setExitFeeRecipient",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_newTransferFeeBasisPoints",
+						"type": "uint256"
+					}
+				],
+				"name": "setTransferFeeBasisPoints",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "transferFeeRecipient",
+						"type": "address"
+					}
+				],
+				"name": "setTransferFeeRecipient",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "symbol",
 				"outputs": [
@@ -886,6 +985,32 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "transferFeeBasisPoints",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "transferFeeTreasury",
+				"outputs": [
+					{
+						"internalType": "address payable",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -925,19 +1050,6 @@
 				"name": "transferOwnership",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "treasury",
-				"outputs": [
-					{
-						"internalType": "address payable",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1074,6 +1186,11 @@
 						"details": "The caller account is not authorized to perform an operation."
 					}
 				],
+				"ReentrancyGuardReentrantCall()": [
+					{
+						"details": "Unauthorized reentrant call."
+					}
+				],
 				"SafeERC20FailedOperation(address)": [
 					{
 						"details": "An operation with an ERC20 token failed."
@@ -1161,12 +1278,6 @@
 				},
 				"totalSupply()": {
 					"details": "See {IERC20-totalSupply}."
-				},
-				"transfer(address,uint256)": {
-					"details": "See {IERC20-transfer}. Requirements: - `to` cannot be the zero address. - the caller must have a balance of at least `value`."
-				},
-				"transferFrom(address,address,uint256)": {
-					"details": "See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. NOTE: Does not update the allowance if the current allowance is the maximum `uint256`. Requirements: - `from` and `to` cannot be the zero address. - `from` must have a balance of at least `value`. - the caller must have allowance for ``from``'s tokens of at least `value`."
 				},
 				"transferOwnership(address)": {
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
@@ -1287,6 +1398,14 @@
 				"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
 			]
 		},
+		"@openzeppelin/contracts/utils/ReentrancyGuard.sol": {
+			"keccak256": "0xf980daa263b661ab8ddee7d4fd833c7da7e7995e2c359ff1f17e67e4112f2236",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://7448ab095d6940130bcf76ba47a2eab14148c83119523b93dd89f6d84edd6c02",
+				"dweb:/ipfs/QmawrZ4voKQjH3oomXT3Kuheb3Mnmo2VvVpxg8Ne5UJUrd"
+			]
+		},
 		"@openzeppelin/contracts/utils/math/Math.sol": {
 			"keccak256": "0x005ec64c6313f0555d59e278f9a7a5ab2db5bdc72a027f255a37c327af1ec02d",
 			"license": "MIT",
@@ -1296,19 +1415,19 @@
 			]
 		},
 		"contracts/ERC4626Fees.sol": {
-			"keccak256": "0x27868bac29ddef273525734a8ed0262f43c6f5828224af6cb4ff2dfe13e2416a",
+			"keccak256": "0xed73ad250856d0aee910a70f77cf4e3b675edf7d7ef9273a718a728083f26b18",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://9d7a6bf972009b2c65e765ea8fbfd0c126eecfa4b558c41ef8f6ab14717f914f",
-				"dweb:/ipfs/QmZB9piBJcG5NeLLMpmVm8jQcmuJx2vEjSy9mturrBjfAR"
+				"bzz-raw://66494b3df034cfc83554a97f0bab40e4670b2b23abe345f15145f75da20ac018",
+				"dweb:/ipfs/QmcK7MjXVZk4XCAfyeoTqME7MMgQERHaAcxkdpyJMRUmcc"
 			]
 		},
 		"contracts/KimboSchool.sol": {
-			"keccak256": "0x8221e4add4ca90f3cc370a3c00875ad2575324263156763dcdc114914f40d5a4",
+			"keccak256": "0x7738074bf04c1dc56d17556209238e1c4da4b5aa556ed276a56302ff9c86f0c9",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://ae1fa7b321a7f85c324bbb3091680925035bb4d6a2f161675f9582e9479b1d6a",
-				"dweb:/ipfs/QmYNaE6iELwW7zo7vGTE15x2an9SncE3S7AxWKMSccYvCM"
+				"bzz-raw://d9ac6962a773e7a48dd9f0d007212cee09d4216c971e8da2cdd3039936593731",
+				"dweb:/ipfs/QmRdtaUN1cacbCAS1HaoroHCUa5dMx5ZEcvFBkgTdwc8S4"
 			]
 		},
 		"hardhat/console.sol": {

@@ -25,18 +25,22 @@ async function main() {
   await susqContract.transfer(depositor2, d2Amount);
 
   await susqContract.connect(depositor1).approve(vaultContract, d1Amount);
+  await vaultContract.connect(depositor1).deposit(d1Amount, depositor1);
 
   const amountApprovedMint = await vaultContract.previewMint(d1Amount);
   await susqContract.connect(depositor2).approve(vaultContract, amountApprovedMint);
+  await vaultContract.connect(depositor2).mint(d1Amount, depositor2);
 
   console.log(`KimboSchool Deployed at ${await vaultContract.getAddress()}`);
   console.log(`SusieQ Deployed at ${await susqContract.getAddress()}`);
   console.log(`owner Address as ${await owner.getAddress()}`);
   console.log(`owner Balance at ${await susqContract.balanceOf(owner)}`);
   console.log(`depositor1 Address as ${await depositor1.getAddress()}`);
-  console.log(`depositor1 Balance at ${await susqContract.balanceOf(depositor1)}`);
+  console.log(`depositor1 SusQBalance at ${await susqContract.balanceOf(depositor1)}`);
+  console.log(`depositor1 xSusQBalance at ${await vaultContract.balanceOf(depositor1)}`);
   console.log(`depositor2 Address as ${await depositor2.getAddress()}`);
-  console.log(`depositor2 Balance at ${await susqContract.balanceOf(depositor2)}`);
+  console.log(`depositor2 SusQBalance at ${await susqContract.balanceOf(depositor2)}`);
+  console.log(`depositor2 xSusQBalance at ${await vaultContract.balanceOf(depositor2)}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

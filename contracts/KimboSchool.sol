@@ -102,12 +102,25 @@ contract KimboSchool is ERC4626Fees, ReentrancyGuard, Ownable(msg.sender) {
         return exitFeeBasisPoints;
     }
 
+    function _transferFeeBasisPoints()
+        internal
+        view
+        override
+        returns (uint256)
+    {
+        return transferFeeBasisPoints;
+    }
+
     function _entryFeeRecipient() internal view override returns (address) {
         return entryFeeTreasury;
     }
 
     function _exitFeeRecipient() internal view override returns (address) {
         return exitFeeTreasury;
+    }
+
+    function _transferFeeRecipient() internal view override returns (address) {
+        return transferFeeTreasury;
     }
 
     function setEntryFeeBasisPoints(
@@ -138,7 +151,7 @@ contract KimboSchool is ERC4626Fees, ReentrancyGuard, Ownable(msg.sender) {
                 _newTransferFeeBasisPoints <= 500,
             "Invalid fee"
         );
-        exitFeeBasisPoints = _newTransferFeeBasisPoints;
+        transferFeeBasisPoints = _newTransferFeeBasisPoints;
     }
 
     function setEntryFeeRecipient(
