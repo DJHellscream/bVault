@@ -19,6 +19,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Kimbo School Vault
 /// @author @therealbifkn
+/// @custom:security-contact @therealbifkn
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     address payable public entryFeeTreasury;
     address payable public exitFeeTreasury;
