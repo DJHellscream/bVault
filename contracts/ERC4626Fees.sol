@@ -58,6 +58,11 @@ abstract contract ERC4626Fees is ERC4626 {
 
         if (fee > 0) {
             super.transfer(recipient, fee);
+            // If the recipient of the vault token is itself
+            // then burn it; otherwise it will be stuck
+            if (recipient == address(this)) {
+                _burn(recipient, fee);
+            }
         }
 
         return super.transfer(to, value - fee);
@@ -73,6 +78,11 @@ abstract contract ERC4626Fees is ERC4626 {
 
         if (fee > 0) {
             super.transferFrom(from, recipient, fee);
+            // If the recipient of the vault token is itself
+            // then burn it; otherwise it will be stuck
+            if (recipient == address(this)) {
+                _burn(recipient, fee);
+            }
         }
 
         return super.transferFrom(from, to, value - fee);
