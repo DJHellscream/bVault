@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
+/// @title Kimbo School Vault
+/// @author @therealbifkn
+
+///////////////////////////////////////////////////////////////////////////////////
+// FANCY STUFF
+//
+//
+
 import "hardhat/console.sol";
 import "./ERC4626Fees.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
