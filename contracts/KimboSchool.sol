@@ -29,8 +29,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     error FeeOutOfBounds();
 
-    event FeeUpdated(uint256 newFee);
-    event TreasuryUpdated(address newAddress);
+    event FeeUpdated(address indexed caller, uint256 newFee);
+    event TreasuryUpdated(address indexed caller, address newAddress);
 
     constructor(
         IERC20 _asset,
@@ -84,7 +84,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         entryFeeBasisPoints = _newFeeBasisPoints;
 
-        emit FeeUpdated(_newFeeBasisPoints);
+        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
 
     ///
@@ -97,7 +97,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         exitFeeBasisPoints = _newFeeBasisPoints;
 
-        emit FeeUpdated(_newFeeBasisPoints);
+        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
 
     ///
@@ -110,7 +110,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         transferFeeBasisPoints = _newFeeBasisPoints;
 
-        emit FeeUpdated(_newFeeBasisPoints);
+        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
 
     ///
@@ -120,7 +120,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     ) external onlyOwner {
         entryFeeTreasury = payable(entryFeeRecipient);
 
-        emit TreasuryUpdated(entryFeeRecipient);
+        emit TreasuryUpdated(msg.sender, entryFeeRecipient);
     }
 
     ///
@@ -128,7 +128,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     function setExitFeeRecipient(address exitFeeRecipient) external onlyOwner {
         exitFeeTreasury = payable(exitFeeRecipient);
 
-        emit TreasuryUpdated(exitFeeRecipient);
+        emit TreasuryUpdated(msg.sender, exitFeeRecipient);
     }
 
     ///
@@ -138,6 +138,6 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     ) external onlyOwner {
         transferFeeTreasury = payable(transferFeeRecipient);
 
-        emit TreasuryUpdated(transferFeeRecipient);
+        emit TreasuryUpdated(msg.sender, transferFeeRecipient);
     }
 }
