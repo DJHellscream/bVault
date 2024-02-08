@@ -30,6 +30,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     uint256 public exitFeeBasisPoints = 100;
     uint256 public transferFeeBasisPoints = 100;
 
+    error FeeOutOfBounds();
+
     constructor(
         IERC20 _asset,
         address treasuryAddress
@@ -143,10 +145,13 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     function setEntryFeeBasisPoints(
         uint256 _newEntryFeeBasisPoints
     ) external onlyOwner {
-        require(
-            _newEntryFeeBasisPoints >= 0 && _newEntryFeeBasisPoints <= 500,
-            "Invalid fee"
-        );
+        // require(
+        //     _newEntryFeeBasisPoints >= 0 && _newEntryFeeBasisPoints <= 500,
+        //     "Invalid fee"
+        // );
+        if (_newEntryFeeBasisPoints < 0) revert FeeOutOfBounds();
+        if (_newEntryFeeBasisPoints > 500) revert FeeOutOfBounds();
+
         entryFeeBasisPoints = _newEntryFeeBasisPoints;
     }
 
