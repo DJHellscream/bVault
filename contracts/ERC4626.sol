@@ -98,8 +98,10 @@ abstract contract ERC4626 is
         _asset = asset_;
     }
 
-    // The following functions are overrides required by Solidity.
-
+    /// @dev required override
+    /// @param from from address
+    /// @param to to address
+    /// @param value value to update
     function _update(
         address from,
         address to,
@@ -108,6 +110,8 @@ abstract contract ERC4626 is
         super._update(from, to, value);
     }
 
+    /// @dev required override
+    /// @param owner owner of token
     function nonces(
         address owner
     ) public view override(ERC20Permit, Nonces) returns (uint256) {

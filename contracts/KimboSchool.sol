@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-/// @title Kimbo School Vault
-/// @author @therealbifkn
-
 // ▄    ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄
 //▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░▌ ▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌
 //▐░▌ ▐░▌  ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌   ▐░▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌     ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░▌
@@ -20,6 +17,8 @@ import "./ERC4626Fees.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @title Kimbo School Vault
+/// @author @therealbifkn
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     address payable public entryFeeTreasury;
     address payable public exitFeeTreasury;
@@ -75,6 +74,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         return transferFeeTreasury;
     }
 
+    ///
+    /// @param _newFeeBasisPoints set Entry Fee to new Basis Point
     function setEntryFeeBasisPoints(
         uint256 _newFeeBasisPoints
     ) external onlyOwner {
@@ -86,6 +87,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(_newFeeBasisPoints);
     }
 
+    ///
+    /// @param _newFeeBasisPoints set Exit Fee to new Basis Point
     function setExitFeeBasisPoints(
         uint256 _newFeeBasisPoints
     ) external onlyOwner {
@@ -97,6 +100,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(_newFeeBasisPoints);
     }
 
+    ///
+    /// @param _newFeeBasisPoints set Transfer Fee to new Basis Point
     function setTransferFeeBasisPoints(
         uint256 _newFeeBasisPoints
     ) external onlyOwner {
@@ -108,6 +113,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(_newFeeBasisPoints);
     }
 
+    ///
+    /// @param entryFeeRecipient set Entry Fee Recipient
     function setEntryFeeRecipient(
         address entryFeeRecipient
     ) external onlyOwner {
@@ -116,12 +123,16 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit TreasuryUpdated(entryFeeRecipient);
     }
 
+    ///
+    /// @param exitFeeRecipient set Exit Fee Recipient
     function setExitFeeRecipient(address exitFeeRecipient) external onlyOwner {
         exitFeeTreasury = payable(exitFeeRecipient);
 
         emit TreasuryUpdated(exitFeeRecipient);
     }
 
+    ///
+    /// @param transferFeeRecipient set Transfer Fee Recipient
     function setTransferFeeRecipient(
         address transferFeeRecipient
     ) external onlyOwner {

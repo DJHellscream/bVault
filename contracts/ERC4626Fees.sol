@@ -48,6 +48,7 @@ abstract contract ERC4626Fees is ERC4626 {
         return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
     }
 
+    /// @dev apply transfer fee
     function transfer(
         address to,
         uint256 value
@@ -67,6 +68,7 @@ abstract contract ERC4626Fees is ERC4626 {
         return super.transfer(to, value - fee);
     }
 
+    /// @dev apply transfer fee
     function transferFrom(
         address from,
         address to,
