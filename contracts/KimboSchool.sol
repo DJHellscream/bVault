@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract KimboSchool is ERC4626Fees, ReentrancyGuard, Ownable(msg.sender) {
+contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     address payable public entryFeeTreasury;
     address payable public exitFeeTreasury;
     address payable public transferFeeTreasury;
