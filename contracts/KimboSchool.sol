@@ -33,6 +33,9 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     event FeeUpdated(address indexed caller, uint256 newFee);
     event TreasuryUpdated(address indexed caller, address newAddress);
 
+    ///
+    /// @param _asset Underlying ERC20 asset
+    /// @param treasuryAddress initial address for fee recipient
     constructor(
         IERC20 _asset,
         address treasuryAddress
