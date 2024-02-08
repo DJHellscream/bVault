@@ -222,7 +222,7 @@ abstract contract ERC4626 is
     function deposit(
         uint256 assets,
         address receiver
-    ) public virtual returns (uint256) {
+    ) external virtual returns (uint256) {
         uint256 maxAssets = maxDeposit(receiver);
         if (assets > maxAssets) {
             revert ERC4626ExceededMaxDeposit(receiver, assets, maxAssets);
