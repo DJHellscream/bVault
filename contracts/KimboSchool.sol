@@ -28,9 +28,11 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     uint256 public exitFeeBasisPoints = 100;
     uint256 public transferFeeBasisPoints = 100;
 
+    // Errors
     error FeeOutOfBounds();
     error InvalidFeeRecipient();
 
+    // Events
     event FeeUpdated(address indexed caller, uint256 newFee);
     event TreasuryUpdated(address indexed caller, address newAddress);
 
@@ -145,4 +147,29 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         emit TreasuryUpdated(msg.sender, feeRecipient);
     }
+
+    /// This is to get incorrectly sent tokens out of the contract
+    /// @param _tokenContract token contract of the tokens to be withdrawn
+    /// @param _recipient address to transfer to
+    /// @param _amount amount to withdraw
+    function withdrawToken(
+        address _tokenContract,
+        address _recipient,
+        uint256 _amount
+    ) external onlyOwner {
+        require(_tokenContract != asset(), "Underlying");
+
+        IERC20 tokenContract = IERC20(_tokenContract);
+        tokenContract.transfer(_recipient, _amount);
+    }
+
+    /// This is to get incorrectly sent Native currency out of the contract
+    /// @param _recipient receiver of the Native currency
+    function withdrawNative(address _recipient) external onlyOwner {
+        uint256 amount = address(this).balance;
+        payable(_recipient).transfer(amount);
+    }
+
+    // Fallback function to accept Native currency.
+    receive() external payable {}
 }
