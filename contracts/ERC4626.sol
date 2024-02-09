@@ -9,7 +9,6 @@ import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 
 /**
@@ -49,13 +48,7 @@ import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
  * To learn more, check out our xref:ROOT:erc4626.adoc[ERC-4626 guide].
  * ====
  */
-abstract contract ERC4626 is
-    ERC20,
-    ERC20Burnable,
-    ERC20Permit,
-    ERC20Votes,
-    IERC4626
-{
+abstract contract ERC4626 is ERC20, ERC20Permit, ERC20Votes, IERC4626 {
     using Math for uint256;
 
     IERC20 private immutable _asset;
@@ -226,7 +219,7 @@ abstract contract ERC4626 is
     function deposit(
         uint256 assets,
         address receiver
-    ) external virtual returns (uint256) {
+    ) public virtual returns (uint256) {
         uint256 maxAssets = maxDeposit(receiver);
         if (assets > maxAssets) {
             revert ERC4626ExceededMaxDeposit(receiver, assets, maxAssets);

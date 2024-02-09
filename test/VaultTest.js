@@ -21,7 +21,8 @@ describe("Market", function () {
     const vaultAddress = await vaultContract.getAddress();
     const susqAddress = await susqContract.getAddress();
 
-    await vaultContract.setTransferFeeRecipient(vaultAddress);
+    console.log("vaultAddress: %s", vaultAddress);
+    console.log("susqAddress: %s", susqAddress);
 
     return {
       vaultContract, vaultAddress, susqContract, susqAddress, owner, treasuryAddress, depositor1, depositor2, depositor3

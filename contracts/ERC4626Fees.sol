@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.20;
 
+import {ERC4626} from "./ERC4626.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC4626} from "./ERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -48,7 +48,6 @@ abstract contract ERC4626Fees is ERC4626 {
         return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
     }
 
-    /// @dev apply transfer fee
     function transfer(
         address to,
         uint256 value
@@ -56,19 +55,13 @@ abstract contract ERC4626Fees is ERC4626 {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         address recipient = _transferFeeRecipient();
 
-        if (fee > 0) {
+        if (fee > 0 && recipient != address(this)) {
             super.transfer(recipient, fee);
-            // If the recipient of the vault token is itself
-            // then burn it; otherwise it will be stuck
-            if (recipient == address(this)) {
-                _burn(recipient, fee);
-            }
         }
 
         return super.transfer(to, value - fee);
     }
 
-    /// @dev apply transfer fee
     function transferFrom(
         address from,
         address to,
@@ -77,13 +70,8 @@ abstract contract ERC4626Fees is ERC4626 {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         address recipient = _transferFeeRecipient();
 
-        if (fee > 0) {
+        if (fee > 0 && recipient != address(this)) {
             super.transferFrom(from, recipient, fee);
-            // If the recipient of the vault token is itself
-            // then burn it; otherwise it will be stuck
-            if (recipient == address(this)) {
-                _burn(recipient, fee);
-            }
         }
 
         return super.transferFrom(from, to, value - fee);

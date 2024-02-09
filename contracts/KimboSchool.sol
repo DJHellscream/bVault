@@ -29,6 +29,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     uint256 public transferFeeBasisPoints = 100;
 
     error FeeOutOfBounds();
+    error InvalidFeeRecipient();
 
     event FeeUpdated(address indexed caller, uint256 newFee);
     event TreasuryUpdated(address indexed caller, address newAddress);
@@ -118,30 +119,30 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     }
 
     ///
-    /// @param entryFeeRecipient set Entry Fee Recipient
-    function setEntryFeeRecipient(
-        address entryFeeRecipient
-    ) external onlyOwner {
-        entryFeeTreasury = payable(entryFeeRecipient);
+    /// @param feeRecipient set Entry Fee Recipient
+    function setEntryFeeRecipient(address feeRecipient) external onlyOwner {
+        if (feeRecipient == address(this)) revert InvalidFeeRecipient();
 
-        emit TreasuryUpdated(msg.sender, entryFeeRecipient);
+        entryFeeTreasury = payable(feeRecipient);
+
+        emit TreasuryUpdated(msg.sender, feeRecipient);
     }
 
     ///
-    /// @param exitFeeRecipient set Exit Fee Recipient
-    function setExitFeeRecipient(address exitFeeRecipient) external onlyOwner {
-        exitFeeTreasury = payable(exitFeeRecipient);
+    /// @param feeRecipient set Exit Fee Recipient
+    function setExitFeeRecipient(address feeRecipient) external onlyOwner {
+        if (feeRecipient == address(this)) revert InvalidFeeRecipient();
+        exitFeeTreasury = payable(feeRecipient);
 
-        emit TreasuryUpdated(msg.sender, exitFeeRecipient);
+        emit TreasuryUpdated(msg.sender, feeRecipient);
     }
 
     ///
-    /// @param transferFeeRecipient set Transfer Fee Recipient
-    function setTransferFeeRecipient(
-        address transferFeeRecipient
-    ) external onlyOwner {
-        transferFeeTreasury = payable(transferFeeRecipient);
+    /// @param feeRecipient set Transfer Fee Recipient
+    function setTransferFeeRecipient(address feeRecipient) external onlyOwner {
+        if (feeRecipient == address(this)) revert InvalidFeeRecipient();
+        transferFeeTreasury = payable(feeRecipient);
 
-        emit TreasuryUpdated(msg.sender, transferFeeRecipient);
+        emit TreasuryUpdated(msg.sender, feeRecipient);
     }
 }
