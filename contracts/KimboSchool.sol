@@ -42,7 +42,11 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     constructor(
         IERC20 _asset,
         address treasuryAddress
-    ) ERC4626(_asset) ERC20("Kimbo School", "tKimbo") {
+    )
+        ERC4626(_asset)
+        ERC20("Kimbo School", "tKimbo")
+        ERC20Permit("Kimbo Schoo")
+    {
         entryFeeTreasury = payable(treasuryAddress);
         exitFeeTreasury = payable(treasuryAddress);
         transferFeeTreasury = payable(treasuryAddress);

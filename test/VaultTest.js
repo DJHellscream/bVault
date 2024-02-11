@@ -80,9 +80,9 @@ describe("Market", function () {
       console.log("treasuryBalance after Mint: %d", await susqContract.balanceOf(treasuryAddress));
       console.log("vaultBalance - xSusQ after Mint: %d", await vaultContract.balanceOf(vaultAddress));
 
-      console.log("Deposit 100 tokens into Vault");
-      await susqContract.transfer(vaultContract, ethers.parseEther("10"));
-      console.log("vaultBalance - SusQ after Injection: %d", await vaultContract.totalAssets());
+      // console.log("Deposit 100 tokens into Vault");
+      // await susqContract.transfer(vaultContract, ethers.parseEther("10"));
+      // console.log("vaultBalance - SusQ after Injection: %d", await vaultContract.totalAssets());
       const previewW = await vaultContract.connect(depositor1).previewWithdraw(shares1);
       console.log("previewWithdraw: %d", previewW);
       const preview = await vaultContract.connect(depositor1).previewRedeem(shares1);

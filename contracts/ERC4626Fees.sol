@@ -3,18 +3,29 @@
 pragma solidity ^0.8.20;
 
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @dev ERC-4626 vault with entry/exit fees expressed in https://en.wikipedia.org/wiki/Basis_point[basis point (bp)].
-abstract contract ERC4626Fees is ERC4626 {
+abstract contract ERC4626Fees is ERC4626, ERC20Permit {
     using Math for uint256;
 
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
 
     // === Overrides ===
+
+    function decimals()
+        public
+        view
+        virtual
+        override(ERC4626, ERC20)
+        returns (uint8)
+    {
+        return super.decimals();
+    }
 
     /// @dev Preview taking an entry fee on deposit. See {IERC4626-previewDeposit}.
     function previewDeposit(
@@ -31,22 +42,6 @@ abstract contract ERC4626Fees is ERC4626 {
         uint256 assets = super.previewMint(shares);
         return assets + _feeOnRaw(assets, _entryFeeBasisPoints());
     }
-
-    // /// @dev Preview adding an exit fee on withdraw. See {IERC4626-previewWithdraw}.
-    // function previewWithdraw(
-    //     uint256 assets
-    // ) public view virtual override returns (uint256) {
-    //     uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
-    //     return super.previewWithdraw(assets + fee);
-    // }
-
-    // /// @dev Preview taking an exit fee on redeem. See {IERC4626-previewRedeem}.
-    // function previewRedeem(
-    //     uint256 shares
-    // ) public view virtual override returns (uint256) {
-    //     uint256 assets = super.previewRedeem(shares);
-    //     return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
-    // }
 
     function transfer(
         address to,
