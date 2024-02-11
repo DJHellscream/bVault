@@ -32,13 +32,21 @@ abstract contract ERC4626Fees is ERC4626 {
         return assets + _feeOnRaw(assets, _entryFeeBasisPoints());
     }
 
-    /// @dev Preview taking an exit fee on redeem. See {IERC4626-previewRedeem}.
-    function previewRedeem(
-        uint256 shares
-    ) public view virtual override returns (uint256) {
-        uint256 assets = super.previewRedeem(shares);
-        return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
-    }
+    // /// @dev Preview adding an exit fee on withdraw. See {IERC4626-previewWithdraw}.
+    // function previewWithdraw(
+    //     uint256 assets
+    // ) public view virtual override returns (uint256) {
+    //     uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
+    //     return super.previewWithdraw(assets + fee);
+    // }
+
+    // /// @dev Preview taking an exit fee on redeem. See {IERC4626-previewRedeem}.
+    // function previewRedeem(
+    //     uint256 shares
+    // ) public view virtual override returns (uint256) {
+    //     uint256 assets = super.previewRedeem(shares);
+    //     return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
+    // }
 
     function transfer(
         address to,
@@ -110,6 +118,7 @@ abstract contract ERC4626Fees is ERC4626 {
         }
 
         // If there are no more vault tokens then remove any dust from contract
+        // otherwise it's possible no more vault tokens could be issued.
         if (totalSupply() == 0) {
             SafeERC20.safeTransfer(IERC20(asset()), recipient, totalAssets());
         }

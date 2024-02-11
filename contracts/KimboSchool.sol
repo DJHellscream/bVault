@@ -78,9 +78,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     ///
     /// @param _newFeeBasisPoints set Entry Fee to new Basis Point
-    function setEntryFeeBasisPoints(
-        uint256 _newFeeBasisPoints
-    ) external onlyOwner {
+    function setEntryFee(uint256 _newFeeBasisPoints) external onlyOwner {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
             revert FeeOutOfBounds();
 
@@ -91,9 +89,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     ///
     /// @param _newFeeBasisPoints set Exit Fee to new Basis Point
-    function setExitFeeBasisPoints(
-        uint256 _newFeeBasisPoints
-    ) external onlyOwner {
+    function setExitFee(uint256 _newFeeBasisPoints) external onlyOwner {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
             revert FeeOutOfBounds();
 
@@ -104,9 +100,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     ///
     /// @param _newFeeBasisPoints set Transfer Fee to new Basis Point
-    function setTransferFeeBasisPoints(
-        uint256 _newFeeBasisPoints
-    ) external onlyOwner {
+    function setTransferFee(uint256 _newFeeBasisPoints) external onlyOwner {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
             revert FeeOutOfBounds();
 
@@ -144,17 +138,17 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     }
 
     /// This is to get incorrectly sent tokens out of the contract
-    /// @param _tokenContract token contract of the tokens to be withdrawn
+    /// @param _token token contract of the tokens to be withdrawn
     /// @param _recipient address to transfer to
     /// @param _amount amount to withdraw
     function withdrawToken(
-        address _tokenContract,
+        address _token,
         address _recipient,
         uint256 _amount
     ) external onlyOwner {
-        require(_tokenContract != asset(), "Underlying");
+        require(_token != asset(), "Underlying");
 
-        IERC20 tokenContract = IERC20(_tokenContract);
+        IERC20 tokenContract = IERC20(_token);
         tokenContract.transfer(_recipient, _amount);
     }
 
