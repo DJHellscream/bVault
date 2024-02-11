@@ -23,9 +23,10 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     address payable public entryFeeTreasury;
     address payable public exitFeeTreasury;
     address payable public transferFeeTreasury;
-    uint256 public entryFeeBasisPoints = 500;
-    uint256 public exitFeeBasisPoints = 100;
-    uint256 public transferFeeBasisPoints = 50;
+    /// @notice Fees are in the format of BasisPoints
+    uint256 public entryFee = 500;
+    uint256 public exitFee = 100;
+    uint256 public transferFee = 50;
 
     // Errors
     error FeeOutOfBounds();
@@ -48,11 +49,11 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     }
 
     function _entryFeeBasisPoints() internal view override returns (uint256) {
-        return entryFeeBasisPoints;
+        return entryFee;
     }
 
     function _exitFeeBasisPoints() internal view override returns (uint256) {
-        return exitFeeBasisPoints;
+        return exitFee;
     }
 
     function _transferFeeBasisPoints()
@@ -61,7 +62,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         override
         returns (uint256)
     {
-        return transferFeeBasisPoints;
+        return transferFee;
     }
 
     function _entryFeeRecipient() internal view override returns (address) {
@@ -82,7 +83,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
             revert FeeOutOfBounds();
 
-        entryFeeBasisPoints = _newFeeBasisPoints;
+        entryFee = _newFeeBasisPoints;
 
         emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
@@ -93,7 +94,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
             revert FeeOutOfBounds();
 
-        exitFeeBasisPoints = _newFeeBasisPoints;
+        exitFee = _newFeeBasisPoints;
 
         emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
@@ -104,7 +105,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
             revert FeeOutOfBounds();
 
-        transferFeeBasisPoints = _newFeeBasisPoints;
+        transferFee = _newFeeBasisPoints;
 
         emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
