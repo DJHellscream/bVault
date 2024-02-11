@@ -65,36 +65,38 @@ describe("Market", function () {
     }
 
     it("Should deposit 100 tokens and get back 100 shares - fee", async function () {
-      const { vaultContract, vaultAddress, susqContract, treasuryAddress, depositor1, depositor2, depositor3 } = await loadFixture(deployVaultFixture);
+      const { vaultContract, vaultAddress, susqContract, susqAddress, treasuryAddress, depositor1, depositor2, depositor3 } = await loadFixture(deployVaultFixture);
       const { amountApprovedDeposit, amountApprovedMint } = await loadFixture(TransferAndApproveFixture);
 
+      console.log("treasuryBalance before deposit: %d", await susqContract.balanceOf(treasuryAddress));
       await vaultContract.connect(depositor1).deposit(amountApprovedDeposit, depositor1);
-      const d1 = await vaultContract.balanceOf(depositor1);
-      console.log("sharesViaDeposit: %d", d1);
-      console.log("treasuryBalance after Deposit: %d", await susqContract.balanceOf(treasuryAddress));
-      console.log("vaultBalance - xSusQ after Deposit: %d", await vaultContract.balanceOf(vaultAddress));
+      const shares1 = await vaultContract.balanceOf(depositor1);
+      console.log("sharesViaDeposit: %d", shares1);
+      console.log("vaultBalance - SusQ after Deposit: %d", await vaultContract.totalAssets());
+      console.log("treasuryBalance after deposit: %d", await susqContract.balanceOf(treasuryAddress));
+      // await vaultContract.connect(depositor2).mint(amountApprovedDeposit, depositor2);
+      // const d2 = await vaultContract.balanceOf(depositor2);
+      // console.log("sharesViaMint: %d", d2);
+      // console.log("treasuryBalance after Mint: %d", await susqContract.balanceOf(treasuryAddress));
+      // console.log("vaultBalance - xSusQ after Mint: %d", await vaultContract.balanceOf(vaultAddress));
 
-      await vaultContract.connect(depositor2).mint(amountApprovedDeposit, depositor2);
-      const d2 = await vaultContract.balanceOf(depositor2);
-      console.log("sharesViaMint: %d", d2);
-      console.log("treasuryBalance after Mint: %d", await susqContract.balanceOf(treasuryAddress));
-      console.log("vaultBalance - xSusQ after Mint: %d", await vaultContract.balanceOf(vaultAddress));
-
-      await vaultContract.connect(depositor1).transfer(depositor3, d1);
-      const d3 = await vaultContract.balanceOf(depositor3);
-      console.log("sharesAfterTransfer - Despositor 1: %d", await vaultContract.balanceOf(depositor1));
-      console.log("sharesAfterTransfer - Despositor 3: %d", d3);
-
-      console.log("treasuryBalance - SusQ after Transfer: %d", await susqContract.balanceOf(treasuryAddress));
-      console.log("treasuryBalance - xSusQ after Transfer: %d", await vaultContract.balanceOf(treasuryAddress));
-      console.log("vaultBalance - xSusQ after Transfer: %d", await vaultContract.balanceOf(vaultAddress));
-
-      await vaultContract.connect(depositor2).approve(depositor3, d2);
-      await vaultContract.connect(depositor3).transferFrom(depositor2, depositor3, d2);
-      console.log("depositor2 xSusQ Balance: %d", await vaultContract.balanceOf(depositor2));
-      console.log("depositor3 xSusQ Balance: %d", await vaultContract.balanceOf(depositor3));
-      console.log("treasuryBalance - xSusQ after TransferFrom: %d", await vaultContract.balanceOf(treasuryAddress));
-      console.log("vaultBalance - xSusQ after TransferFrom: %d", await vaultContract.balanceOf(vaultAddress));
+      console.log("Deposit 100,000 tokens into Vault");
+      await susqContract.transfer(vaultContract, ethers.parseEther("100"));
+      console.log("vaultBalance - SusQ after Injection: %d", await vaultContract.totalAssets());
+      const preview = await vaultContract.connect(depositor1).previewWithdraw(await vaultContract.totalAssets());
+      console.log("previewWithdraw: %d", preview);
+      const convert = await vaultContract.connect(depositor1).convertToShares(await vaultContract.totalAssets());
+      console.log("convertToShares: %d", convert);
+      const maxWithdraw = await vaultContract.connect(depositor1).maxWithdraw(depositor1);
+      console.log("maxWithdraw: %d", maxWithdraw);
+      console.log("total xSusQ: %d", await vaultContract.totalSupply());
+      console.log("treasuryBalance before withdraw: %d", await susqContract.balanceOf(treasuryAddress));
+      const rewards1 = await vaultContract.connect(depositor1).redeem(shares1, depositor1, depositor1);
+      console.log("vaultBalance - SusQ after Withdraw: %d", await susqContract.balanceOf(vaultAddress));
+      console.log("depositor1Balance SusQ after withdraw: %d", await susqContract.balanceOf(depositor1));
+      console.log("depositor1Balance xSusQ after withdraw: %d", await vaultContract.balanceOf(depositor1));
+      console.log("treasuryBalance after withdraw: %d", await susqContract.balanceOf(treasuryAddress));
+      console.log("total xSusQ: %d", await vaultContract.totalSupply());
       // const rewards1 = await vaultContract.connect(depositor1).previewRedeem(d1);
       // const rewards2 = await vaultContract.connect(depositor2).previewRedeem(d2);
       // console.log("rewards1: %d", rewards1);

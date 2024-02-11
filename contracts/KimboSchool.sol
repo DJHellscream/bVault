@@ -14,7 +14,6 @@ pragma solidity ^0.8.20;
 // ▀    ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀
 
 import "./ERC4626Fees.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Kimbo School Vault
@@ -26,7 +25,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     address payable public transferFeeTreasury;
     uint256 public entryFeeBasisPoints = 500;
     uint256 public exitFeeBasisPoints = 100;
-    uint256 public transferFeeBasisPoints = 100;
+    uint256 public transferFeeBasisPoints = 50;
 
     // Errors
     error FeeOutOfBounds();
@@ -42,11 +41,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     constructor(
         IERC20 _asset,
         address treasuryAddress
-    )
-        ERC4626(_asset)
-        ERC20("Kimbo School", "tKimbo")
-        ERC20Permit("Kimbo School")
-    {
+    ) ERC4626(_asset) ERC20("Kimbo School", "tKimbo") {
         entryFeeTreasury = payable(treasuryAddress);
         exitFeeTreasury = payable(treasuryAddress);
         transferFeeTreasury = payable(treasuryAddress);

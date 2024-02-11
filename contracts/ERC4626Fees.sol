@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {ERC4626} from "./ERC4626.sol";
+import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -32,14 +32,6 @@ abstract contract ERC4626Fees is ERC4626 {
         return assets + _feeOnRaw(assets, _entryFeeBasisPoints());
     }
 
-    /// @dev Preview adding an exit fee on withdraw. See {IERC4626-previewWithdraw}.
-    function previewWithdraw(
-        uint256 assets
-    ) public view virtual override returns (uint256) {
-        uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
-        return super.previewWithdraw(assets + fee);
-    }
-
     /// @dev Preview taking an exit fee on redeem. See {IERC4626-previewRedeem}.
     function previewRedeem(
         uint256 shares
@@ -54,12 +46,15 @@ abstract contract ERC4626Fees is ERC4626 {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         address recipient = _transferFeeRecipient();
+        uint256 amount = value;
 
         if (fee > 0 && recipient != address(this)) {
             super.transfer(recipient, fee);
+
+            amount -= fee;
         }
 
-        return super.transfer(to, value - fee);
+        return super.transfer(to, amount);
     }
 
     function transferFrom(
@@ -69,9 +64,12 @@ abstract contract ERC4626Fees is ERC4626 {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         address recipient = _transferFeeRecipient();
+        uint256 amount = value;
 
         if (fee > 0 && recipient != address(this)) {
             super.transferFrom(from, recipient, fee);
+
+            amount -= fee;
         }
 
         return super.transferFrom(from, to, value - fee);
@@ -102,13 +100,18 @@ abstract contract ERC4626Fees is ERC4626 {
         uint256 assets,
         uint256 shares
     ) internal virtual override {
-        uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
+        uint256 fee = _feeOnTotal(assets, _exitFeeBasisPoints());
         address recipient = _exitFeeRecipient();
 
-        super._withdraw(caller, receiver, owner, assets, shares);
+        super._withdraw(caller, receiver, owner, assets - fee, shares);
 
         if (fee > 0 && recipient != address(this)) {
             SafeERC20.safeTransfer(IERC20(asset()), recipient, fee);
+        }
+
+        // If there are no more vault tokens then remove any dust from contract
+        if (totalSupply() == 0) {
+            SafeERC20.safeTransfer(IERC20(asset()), recipient, totalAssets());
         }
     }
 
