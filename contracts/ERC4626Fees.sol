@@ -4,13 +4,15 @@ pragma solidity ^0.8.20;
 
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 
 /// @dev ERC-4626 vault with entry/exit fees expressed in https://en.wikipedia.org/wiki/Basis_point[basis point (bp)].
-abstract contract ERC4626Fees is ERC4626, ERC20Permit {
+abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     using Math for uint256;
 
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
@@ -25,6 +27,29 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit {
         returns (uint8)
     {
         return super.decimals();
+    }
+
+    /**
+     * @dev Returns the underlying asset balance of `account` which can be used by Governor
+     */
+    function _getVotingUnits(
+        address account
+    ) internal view virtual override returns (uint256) {
+        return convertToAssets(balanceOf(account));
+    }
+
+    function _update(
+        address from,
+        address to,
+        uint256 value
+    ) internal virtual override(ERC20, ERC20Votes) {
+        super._update(from, to, value);
+    }
+
+    function nonces(
+        address owner
+    ) public view override(ERC20Permit, Nonces) returns (uint256) {
+        return super.nonces(owner);
     }
 
     /// @dev Preview taking an entry fee on deposit. See {IERC4626-previewDeposit}.
