@@ -31,6 +31,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     // Errors
     error FeeOutOfBounds();
     error InvalidFeeRecipient();
+    error WithdrawUnderlying();
 
     // Events
     event FeeUpdated(address indexed caller, uint256 newFee);
@@ -45,7 +46,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     )
         ERC4626(_asset)
         ERC20("Kimbo School", "tKimbo")
-        ERC20Permit("Kimbo Schoo")
+        ERC20Permit("Kimbo School")
     {
         entryFeeTreasury = payable(treasuryAddress);
         exitFeeTreasury = payable(treasuryAddress);
@@ -146,20 +147,19 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @param _token token contract of the tokens to be withdrawn
     /// @param _recipient address to transfer to
     /// @param _amount amount to withdraw
-    function withdrawToken(
+    function rescueToken(
         address _token,
         address _recipient,
         uint256 _amount
     ) external onlyOwner {
-        require(_token != asset(), "Underlying");
+        if (_token == asset()) revert WithdrawUnderlying();
 
-        IERC20 tokenContract = IERC20(_token);
-        tokenContract.transfer(_recipient, _amount);
+        IERC20(_token).transfer(_recipient, _amount);
     }
 
     /// This is to get incorrectly sent Native currency out of the contract
     /// @param _recipient receiver of the Native currency
-    function withdrawNative(address _recipient) external onlyOwner {
+    function rescueNative(address _recipient) external onlyOwner {
         uint256 amount = address(this).balance;
         payable(_recipient).transfer(amount);
     }

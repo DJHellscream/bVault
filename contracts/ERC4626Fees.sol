@@ -16,6 +16,8 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     using Math for uint256;
 
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
+    address private immutable burnAddress =
+        0x000000000000000000000000000000000000dEaD;
 
     // === Overrides ===
 
@@ -27,6 +29,16 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         returns (uint8)
     {
         return super.decimals();
+    }
+
+    function totalSupply()
+        public
+        view
+        virtual
+        override(ERC20, IERC20)
+        returns (uint256)
+    {
+        return super.totalSupply() - balanceOf(burnAddress);
     }
 
     /**
@@ -68,6 +80,22 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return assets + _feeOnRaw(assets, _entryFeeBasisPoints());
     }
 
+    /// @dev Preview adding an exit fee on withdraw. See {IERC4626-previewWithdraw}.
+    function previewWithdraw(
+        uint256 assets
+    ) public view virtual override returns (uint256) {
+        uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
+        return super.previewWithdraw(assets + fee);
+    }
+
+    /// @dev Preview taking an exit fee on redeem. See {IERC4626-previewRedeem}.
+    function previewRedeem(
+        uint256 shares
+    ) public view virtual override returns (uint256) {
+        uint256 assets = super.previewRedeem(shares);
+        return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
+    }
+
     function transfer(
         address to,
         uint256 value
@@ -100,7 +128,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
             amount -= fee;
         }
 
-        return super.transferFrom(from, to, value - fee);
+        return super.transferFrom(from, to, amount);
     }
 
     /// @dev Send entry fee to {_entryFeeRecipient}. See {IERC4626-_deposit}.
@@ -128,10 +156,10 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 assets,
         uint256 shares
     ) internal virtual override {
-        uint256 fee = _feeOnTotal(assets, _exitFeeBasisPoints());
+        uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
         address recipient = _exitFeeRecipient();
 
-        super._withdraw(caller, receiver, owner, assets - fee, shares);
+        super._withdraw(caller, receiver, owner, assets, shares);
 
         if (fee > 0 && recipient != address(this)) {
             SafeERC20.safeTransfer(IERC20(asset()), recipient, fee);
