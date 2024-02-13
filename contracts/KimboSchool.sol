@@ -13,7 +13,7 @@ pragma solidity ^0.8.20;
 //▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░▌ ▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
 // ▀    ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀
 
-import {ERC4626Fees, IERC20, ERC4626, ERC20, ERC20Permit} from "./ERC4626Fees.sol";
+import {ERC4626Fees, IERC20, ERC4626, ERC20, ERC20Permit, SafeERC20} from "./ERC4626Fees.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Kimbo School Vault
@@ -168,16 +168,17 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     ) external onlyOwner {
         if (_token == asset()) revert RescueUnderlying();
 
-        IERC20(_token).transfer(_recipient, _amount);
+        SafeERC20.safeTransfer(IERC20(_token), _recipient, _amount);
     }
 
     /// This is to get incorrectly sent Native currency out of the contract
     /// @param _recipient receiver of the Native currency
     function rescueNative(address _recipient) external onlyOwner {
-        uint256 amount = address(this).balance;
-        (bool _1, bytes memory _2) = _recipient.call{value: amount}("");
-        _1;
+        (bool sent, bytes memory _2) = _recipient.call{
+            value: address(this).balance
+        }("");
         _2;
+        require(sent, "");
     }
 
     /// @dev Fallback function to accept Native currency.
