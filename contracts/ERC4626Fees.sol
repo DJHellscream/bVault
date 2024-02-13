@@ -18,8 +18,13 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     using Math for uint256;
 
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
-    address private constant BURN_ADDRESS =
+    address internal constant BURN_ADDRESS =
         0x000000000000000000000000000000000000dEaD;
+    uint256 private constant BURN_FEE = 25;
+
+    /// Event to track amount burned via transfers
+    /// @param amount amount burned
+    event Burn(uint256 amount);
 
     // === Overrides ===
 
@@ -114,8 +119,15 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 value
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
+        uint256 burnFee = _feeOnTotal(value, BURN_FEE);
         address recipient = _transferFeeRecipient();
-        uint256 amount = value;
+        // Always reduce burnFee
+        uint256 amount = value - burnFee;
+
+        // Burn .25% of all transfers
+        super.transfer(BURN_ADDRESS, burnFee);
+
+        emit Burn(burnFee);
 
         if (fee > 0 && recipient != address(this)) {
             super.transfer(recipient, fee);
@@ -136,8 +148,15 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 value
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
+        uint256 burnFee = _feeOnTotal(value, BURN_FEE);
         address recipient = _transferFeeRecipient();
-        uint256 amount = value;
+        // Always reduce burnFee
+        uint256 amount = value - burnFee;
+
+        // Burn .25% of all transfers
+        super.transfer(BURN_ADDRESS, burnFee);
+
+        emit Burn(burnFee);
 
         if (fee > 0 && recipient != address(this)) {
             super.transferFrom(from, recipient, fee);

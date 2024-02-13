@@ -40,7 +40,7 @@ async function main() {
   // console.log("Deposit 100,000 tokens into Vault");
   // await susqContract.transfer(vaultContract, ethers.parseEther("100000"));
 
-  // await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
+  await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
 
   console.log(`KimboSchool Deployed at ${await vaultContract.getAddress()}`);
   console.log(`SusieQ Deployed at ${await susqContract.getAddress()}`);
@@ -58,9 +58,9 @@ async function main() {
   // console.log(`depositor4 Address as ${await depositor4.getAddress()}`);
   // console.log(`depositor4 SusQBalance at ${await susqContract.balanceOf(depositor4)}`);
   // console.log(`depositor4 xSusQBalance at ${await vaultContract.balanceOf(depositor4)}`);
-  // console.log(`depositor5 Address as ${await depositor5.getAddress()}`);
-  // console.log(`depositor5 SusQBalance at ${await susqContract.balanceOf(depositor5)}`);
-  // console.log(`depositor5 xSusQBalance at ${await vaultContract.balanceOf(depositor5)}`);
+  console.log(`depositor5 Address as ${await depositor5.getAddress()}`);
+  console.log(`depositor5 SusQBalance at ${await susqContract.balanceOf(depositor5)}`);
+  console.log(`depositor5 xSusQBalance at ${await vaultContract.balanceOf(depositor5)}`);
   console.log(`treasury xSusQBalance at ${await vaultContract.balanceOf(treasuryAddress)}`);
 }
 
