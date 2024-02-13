@@ -175,9 +175,9 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @param _recipient receiver of the Native currency
     function rescueNative(address _recipient) external onlyOwner {
         uint256 amount = address(this).balance;
-        (bool sentAvax, bytes memory _2) = _recipient.call{value: amount}("");
+        (bool _1, bytes memory _2) = _recipient.call{value: amount}("");
+        _1;
         _2;
-        require(sentAvax, "failed to send avax to recipient");
     }
 
     /// @dev Fallback function to accept Native currency.
