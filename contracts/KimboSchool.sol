@@ -27,13 +27,13 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @notice address for transfer fees
     address payable public transferFeeTreasury;
     /// @notice fee for deposit/mint in basis points
-    uint256 public entryFee = 500;
+    uint256 public entryFee = 300;
     /// @notice fee for withdraw/redeem in basis points
     uint256 public exitFee = 100;
     /// @notice fee on transfer in basis points
-    uint256 public transferFee = 50;
+    uint256 public transferFee = 100;
 
-    /// @dev fee is out of bounds - should be > 0 and less than 500
+    /// @dev fee is out of bounds - should be >= 0 and <= 500 (100 for transfer)
     error FeeOutOfBounds();
     /// @dev fee recipient can not be the address of this contract
     error InvalidFeeRecipient();
@@ -121,7 +121,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// set new transfer fee
     /// @param _newFeeBasisPoints set Transfer Fee to new Basis Point
     function setTransferFee(uint256 _newFeeBasisPoints) external onlyOwner {
-        if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
+        if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 100)
             revert FeeOutOfBounds();
 
         transferFee = _newFeeBasisPoints;
