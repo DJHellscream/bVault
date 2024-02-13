@@ -5,18 +5,20 @@ pragma solidity ^0.8.20;
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 
 /// @dev ERC-4626 vault with entry/exit fees expressed in https://en.wikipedia.org/wiki/Basis_point[basis point (bp)].
+/// @notice modifications from the wiki source made by @therealbifkn
+/// @custom:security-contact @therealbifkn
 abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     using Math for uint256;
 
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
-    address private immutable burnAddress =
+    address private constant BURN_ADDRESS =
         0x000000000000000000000000000000000000dEaD;
 
     // === Overrides ===
@@ -40,7 +42,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         override(ERC20, IERC20)
         returns (uint256)
     {
-        return super.totalSupply() - balanceOf(burnAddress);
+        return super.totalSupply() - balanceOf(BURN_ADDRESS);
     }
 
     /**

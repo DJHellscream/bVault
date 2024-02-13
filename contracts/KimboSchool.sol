@@ -13,7 +13,7 @@ pragma solidity ^0.8.20;
 //▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░▌ ▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
 // ▀    ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀
 
-import "./ERC4626Fees.sol";
+import {ERC4626Fees, IERC20, ERC4626, ERC20, ERC20Permit} from "./ERC4626Fees.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title Kimbo School Vault
@@ -63,6 +63,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         entryFeeTreasury = payable(treasuryAddress);
         exitFeeTreasury = payable(treasuryAddress);
         transferFeeTreasury = payable(treasuryAddress);
+
+        emit TreasuryUpdated(msg.sender, treasuryAddress);
     }
 
     function _entryFeeBasisPoints() internal view override returns (uint256) {
@@ -102,7 +104,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         entryFee = _newFeeBasisPoints;
 
-        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
+        emit FeeUpdated(_msgSender(), _newFeeBasisPoints);
     }
 
     /// Set new exit fee
@@ -113,7 +115,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         exitFee = _newFeeBasisPoints;
 
-        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
+        emit FeeUpdated(_msgSender(), _newFeeBasisPoints);
     }
 
     /// set new transfer fee
@@ -124,7 +126,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         transferFee = _newFeeBasisPoints;
 
-        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
+        emit FeeUpdated(_msgSender(), _newFeeBasisPoints);
     }
 
     /// set new entry fee recipient
@@ -134,7 +136,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
         entryFeeTreasury = payable(feeRecipient);
 
-        emit TreasuryUpdated(msg.sender, feeRecipient);
+        emit TreasuryUpdated(_msgSender(), feeRecipient);
     }
 
     /// set new exit fee recipient
@@ -143,7 +145,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         if (feeRecipient == address(this)) revert InvalidFeeRecipient();
         exitFeeTreasury = payable(feeRecipient);
 
-        emit TreasuryUpdated(msg.sender, feeRecipient);
+        emit TreasuryUpdated(_msgSender(), feeRecipient);
     }
 
     /// set new transfer fee recipient
@@ -152,7 +154,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         if (feeRecipient == address(this)) revert InvalidFeeRecipient();
         transferFeeTreasury = payable(feeRecipient);
 
-        emit TreasuryUpdated(msg.sender, feeRecipient);
+        emit TreasuryUpdated(_msgSender(), feeRecipient);
     }
 
     /// This is to get incorrectly sent tokens out of the contract
@@ -173,9 +175,11 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @param _recipient receiver of the Native currency
     function rescueNative(address _recipient) external onlyOwner {
         uint256 amount = address(this).balance;
-        payable(_recipient).transfer(amount);
+        (bool sentAvax, bytes memory _2) = _recipient.call{value: amount}("");
+        _2;
+        require(sentAvax, "failed to send avax to recipient");
     }
 
-    // Fallback function to accept Native currency.
+    /// @dev Fallback function to accept Native currency.
     receive() external payable {}
 }
