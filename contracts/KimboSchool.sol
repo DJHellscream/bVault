@@ -20,24 +20,36 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @author @therealbifkn
 /// @custom:security-contact @therealbifkn
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
+    /// @notice address for entry fees
     address payable public entryFeeTreasury;
+    /// @notice address for exit fees
     address payable public exitFeeTreasury;
+    /// @notice address for transfer fees
     address payable public transferFeeTreasury;
-    /// @notice Fees are in the format of BasisPoints
+    /// @notice fee for deposit/mint in basis points
     uint256 public entryFee = 500;
+    /// @notice fee for withdraw/redeem in basis points
     uint256 public exitFee = 100;
+    /// @notice fee on transfer in basis points
     uint256 public transferFee = 50;
 
-    // Errors
+    /// @dev fee is out of bounds - should be > 0 and less than 500
     error FeeOutOfBounds();
+    /// @dev fee recipient can not be the address of this contract
     error InvalidFeeRecipient();
-    error WithdrawUnderlying();
+    /// @dev can not resuce the underlying token
+    error RescueUnderlying();
 
-    // Events
+    /// Event for when fees are updated
+    /// @param caller caller (should be owner)
+    /// @param newFee new fee value
     event FeeUpdated(address indexed caller, uint256 newFee);
+    /// Event for when of the fee recipient addresses is updated
+    /// @param caller calelr (should be owner)
+    /// @param newAddress new fee recipient address
     event TreasuryUpdated(address indexed caller, address newAddress);
 
-    ///
+    /// Constructor
     /// @param _asset Underlying ERC20 asset
     /// @param treasuryAddress initial address for fee recipient
     constructor(
@@ -82,7 +94,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         return transferFeeTreasury;
     }
 
-    ///
+    /// set new entry fee
     /// @param _newFeeBasisPoints set Entry Fee to new Basis Point
     function setEntryFee(uint256 _newFeeBasisPoints) external onlyOwner {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
@@ -93,7 +105,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
 
-    ///
+    /// Set new exit fee
     /// @param _newFeeBasisPoints set Exit Fee to new Basis Point
     function setExitFee(uint256 _newFeeBasisPoints) external onlyOwner {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
@@ -104,7 +116,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
 
-    ///
+    /// set new transfer fee
     /// @param _newFeeBasisPoints set Transfer Fee to new Basis Point
     function setTransferFee(uint256 _newFeeBasisPoints) external onlyOwner {
         if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
@@ -115,7 +127,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(msg.sender, _newFeeBasisPoints);
     }
 
-    ///
+    /// set new entry fee recipient
     /// @param feeRecipient set Entry Fee Recipient
     function setEntryFeeRecipient(address feeRecipient) external onlyOwner {
         if (feeRecipient == address(this)) revert InvalidFeeRecipient();
@@ -125,7 +137,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit TreasuryUpdated(msg.sender, feeRecipient);
     }
 
-    ///
+    /// set new exit fee recipient
     /// @param feeRecipient set Exit Fee Recipient
     function setExitFeeRecipient(address feeRecipient) external onlyOwner {
         if (feeRecipient == address(this)) revert InvalidFeeRecipient();
@@ -134,7 +146,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit TreasuryUpdated(msg.sender, feeRecipient);
     }
 
-    ///
+    /// set new transfer fee recipient
     /// @param feeRecipient set Transfer Fee Recipient
     function setTransferFeeRecipient(address feeRecipient) external onlyOwner {
         if (feeRecipient == address(this)) revert InvalidFeeRecipient();
@@ -152,7 +164,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         address _recipient,
         uint256 _amount
     ) external onlyOwner {
-        if (_token == asset()) revert WithdrawUnderlying();
+        if (_token == asset()) revert RescueUnderlying();
 
         IERC20(_token).transfer(_recipient, _amount);
     }

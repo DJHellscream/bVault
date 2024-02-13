@@ -21,6 +21,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
 
     // === Overrides ===
 
+    /// @dev required by solidity
     function decimals()
         public
         view
@@ -31,6 +32,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return super.decimals();
     }
 
+    /// @dev takes into account any vault tokens that were sent to the dead address
     function totalSupply()
         public
         view
@@ -50,6 +52,10 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return convertToAssets(balanceOf(account));
     }
 
+    /// @dev required by solidity
+    /// @param from from address
+    /// @param to to address
+    /// @param value value to update to
     function _update(
         address from,
         address to,
@@ -58,6 +64,8 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         super._update(from, to, value);
     }
 
+    /// @dev required by solidity
+    /// @param owner owner of the tokens
     function nonces(
         address owner
     ) public view override(ERC20Permit, Nonces) returns (uint256) {
@@ -96,6 +104,9 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
     }
 
+    /// @dev overridden to collect fees on transfer
+    /// @param to to address
+    /// @param value value to transfer
     function transfer(
         address to,
         uint256 value
@@ -113,6 +124,10 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return super.transfer(to, amount);
     }
 
+    /// @dev overridden to collect fees on transfer
+    /// @param from from address
+    /// @param to to address
+    /// @param value value to transfer
     function transferFrom(
         address from,
         address to,
