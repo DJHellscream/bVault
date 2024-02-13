@@ -2,20 +2,75 @@
 
 pragma solidity ^0.8.20;
 
-import "hardhat/console.sol";
+import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 
 /// @dev ERC-4626 vault with entry/exit fees expressed in https://en.wikipedia.org/wiki/Basis_point[basis point (bp)].
-abstract contract ERC4626Fees is ERC4626 {
+abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     using Math for uint256;
 
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
+    address private immutable burnAddress =
+        0x000000000000000000000000000000000000dEaD;
 
     // === Overrides ===
+
+    /// @dev required by solidity
+    function decimals()
+        public
+        view
+        virtual
+        override(ERC4626, ERC20)
+        returns (uint8)
+    {
+        return super.decimals();
+    }
+
+    /// @dev takes into account any vault tokens that were sent to the dead address
+    function totalSupply()
+        public
+        view
+        virtual
+        override(ERC20, IERC20)
+        returns (uint256)
+    {
+        return super.totalSupply() - balanceOf(burnAddress);
+    }
+
+    /**
+     * @dev Returns the underlying asset balance of `account` which can be used by Governor
+     */
+    function _getVotingUnits(
+        address account
+    ) internal view virtual override returns (uint256) {
+        return convertToAssets(balanceOf(account));
+    }
+
+    /// @dev required by solidity
+    /// @param from from address
+    /// @param to to address
+    /// @param value value to update to
+    function _update(
+        address from,
+        address to,
+        uint256 value
+    ) internal virtual override(ERC20, ERC20Votes) {
+        super._update(from, to, value);
+    }
+
+    /// @dev required by solidity
+    /// @param owner owner of the tokens
+    function nonces(
+        address owner
+    ) public view override(ERC20Permit, Nonces) returns (uint256) {
+        return super.nonces(owner);
+    }
 
     /// @dev Preview taking an entry fee on deposit. See {IERC4626-previewDeposit}.
     function previewDeposit(
@@ -49,25 +104,30 @@ abstract contract ERC4626Fees is ERC4626 {
         return assets - _feeOnTotal(assets, _exitFeeBasisPoints());
     }
 
+    /// @dev overridden to collect fees on transfer
+    /// @param to to address
+    /// @param value value to transfer
     function transfer(
         address to,
         uint256 value
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         address recipient = _transferFeeRecipient();
+        uint256 amount = value;
 
-        if (fee > 0) {
+        if (fee > 0 && recipient != address(this)) {
             super.transfer(recipient, fee);
-            // If the recipient of the vault token is itself
-            // then burn it; otherwise it will be stuck
-            if (recipient == address(this)) {
-                _burn(recipient, fee);
-            }
+
+            amount -= fee;
         }
 
-        return super.transfer(to, value - fee);
+        return super.transfer(to, amount);
     }
 
+    /// @dev overridden to collect fees on transfer
+    /// @param from from address
+    /// @param to to address
+    /// @param value value to transfer
     function transferFrom(
         address from,
         address to,
@@ -75,17 +135,15 @@ abstract contract ERC4626Fees is ERC4626 {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         address recipient = _transferFeeRecipient();
+        uint256 amount = value;
 
-        if (fee > 0) {
+        if (fee > 0 && recipient != address(this)) {
             super.transferFrom(from, recipient, fee);
-            // If the recipient of the vault token is itself
-            // then burn it; otherwise it will be stuck
-            if (recipient == address(this)) {
-                _burn(recipient, fee);
-            }
+
+            amount -= fee;
         }
 
-        return super.transferFrom(from, to, value - fee);
+        return super.transferFrom(from, to, amount);
     }
 
     /// @dev Send entry fee to {_entryFeeRecipient}. See {IERC4626-_deposit}.
@@ -120,6 +178,12 @@ abstract contract ERC4626Fees is ERC4626 {
 
         if (fee > 0 && recipient != address(this)) {
             SafeERC20.safeTransfer(IERC20(asset()), recipient, fee);
+        }
+
+        // If there are no more vault tokens then remove any dust from contract
+        // otherwise it's possible no more vault tokens could be issued.
+        if (totalSupply() == 0) {
+            SafeERC20.safeTransfer(IERC20(asset()), recipient, totalAssets());
         }
     }
 

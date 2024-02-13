@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-/// @title Kimbo School Vault
-/// @author @therealbifkn
-
 // ▄    ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄
 //▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░▌ ▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌
 //▐░▌ ▐░▌  ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌   ▐░▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌     ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░▌
@@ -16,104 +13,64 @@ pragma solidity ^0.8.20;
 //▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░▌ ▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
 // ▀    ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀
 
-import "hardhat/console.sol";
 import "./ERC4626Fees.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @title Kimbo School Vault
+/// @author @therealbifkn
+/// @custom:security-contact @therealbifkn
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
+    /// @notice address for entry fees
     address payable public entryFeeTreasury;
+    /// @notice address for exit fees
     address payable public exitFeeTreasury;
+    /// @notice address for transfer fees
     address payable public transferFeeTreasury;
-    uint256 public entryFeeBasisPoints = 500;
-    uint256 public exitFeeBasisPoints = 100;
-    uint256 public transferFeeBasisPoints = 100;
+    /// @notice fee for deposit/mint in basis points
+    uint256 public entryFee = 500;
+    /// @notice fee for withdraw/redeem in basis points
+    uint256 public exitFee = 100;
+    /// @notice fee on transfer in basis points
+    uint256 public transferFee = 50;
 
+    /// @dev fee is out of bounds - should be > 0 and less than 500
+    error FeeOutOfBounds();
+    /// @dev fee recipient can not be the address of this contract
+    error InvalidFeeRecipient();
+    /// @dev can not resuce the underlying token
+    error RescueUnderlying();
+
+    /// Event for when fees are updated
+    /// @param caller caller (should be owner)
+    /// @param newFee new fee value
+    event FeeUpdated(address indexed caller, uint256 newFee);
+    /// Event for when of the fee recipient addresses is updated
+    /// @param caller calelr (should be owner)
+    /// @param newAddress new fee recipient address
+    event TreasuryUpdated(address indexed caller, address newAddress);
+
+    /// Constructor
+    /// @param _asset Underlying ERC20 asset
+    /// @param treasuryAddress initial address for fee recipient
     constructor(
         IERC20 _asset,
         address treasuryAddress
-    ) ERC4626(_asset) ERC20("Kimbo School", "xKimbo") {
+    )
+        ERC4626(_asset)
+        ERC20("Kimbo School", "tKimbo")
+        ERC20Permit("Kimbo School")
+    {
         entryFeeTreasury = payable(treasuryAddress);
         exitFeeTreasury = payable(treasuryAddress);
         transferFeeTreasury = payable(treasuryAddress);
     }
 
-    ////////////////////////////////////////////////////////////////
-
-    /** @dev See {IERC4626-deposit}. */
-    function deposit(
-        uint256 assets,
-        address receiver
-    ) public virtual override returns (uint256) {
-        require(
-            assets <= maxDeposit(receiver),
-            "ERC4626: deposit more than max"
-        );
-
-        uint256 shares = previewDeposit(assets);
-        _deposit(_msgSender(), receiver, assets, shares);
-        afterDeposit(assets, shares);
-
-        return shares;
-    }
-
-    /** @dev See {IERC4626-mint}.
-     *
-     * As opposed to {deposit}, minting is allowed even if the vault is in a state where the price of a share is zero.
-     * In this case, the shares will be minted without requiring any assets to be deposited.
-     */
-    function mint(
-        uint256 shares,
-        address receiver
-    ) public virtual override returns (uint256) {
-        require(shares <= maxMint(receiver), "ERC4626: mint more than max");
-
-        uint256 assets = previewMint(shares);
-        _deposit(_msgSender(), receiver, assets, shares);
-        afterDeposit(assets, shares);
-
-        return assets;
-    }
-
-    /** @dev See {IERC4626-redeem}. */
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) public virtual override returns (uint256) {
-        require(shares <= maxRedeem(owner), "ERC4626: redeem more than max");
-
-        uint256 assets = previewRedeem(shares);
-        beforeWithdraw(assets, shares);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
-
-        return assets;
-    }
-
-    /** @dev See {IERC4626-withdraw}. */
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address owner
-    ) public virtual override returns (uint256) {
-        require(
-            assets <= maxWithdraw(owner),
-            "ERC4626: withdraw more than max"
-        );
-
-        uint256 shares = previewWithdraw(assets);
-        beforeWithdraw(assets, shares);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
-
-        return shares;
-    }
-
     function _entryFeeBasisPoints() internal view override returns (uint256) {
-        return entryFeeBasisPoints;
+        return entryFee;
     }
 
     function _exitFeeBasisPoints() internal view override returns (uint256) {
-        return exitFeeBasisPoints;
+        return exitFee;
     }
 
     function _transferFeeBasisPoints()
@@ -122,7 +79,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         override
         returns (uint256)
     {
-        return transferFeeBasisPoints;
+        return transferFee;
     }
 
     function _entryFeeRecipient() internal view override returns (address) {
@@ -137,58 +94,88 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         return transferFeeTreasury;
     }
 
-    function setEntryFeeBasisPoints(
-        uint256 _newEntryFeeBasisPoints
+    /// set new entry fee
+    /// @param _newFeeBasisPoints set Entry Fee to new Basis Point
+    function setEntryFee(uint256 _newFeeBasisPoints) external onlyOwner {
+        if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
+            revert FeeOutOfBounds();
+
+        entryFee = _newFeeBasisPoints;
+
+        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
+    }
+
+    /// Set new exit fee
+    /// @param _newFeeBasisPoints set Exit Fee to new Basis Point
+    function setExitFee(uint256 _newFeeBasisPoints) external onlyOwner {
+        if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
+            revert FeeOutOfBounds();
+
+        exitFee = _newFeeBasisPoints;
+
+        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
+    }
+
+    /// set new transfer fee
+    /// @param _newFeeBasisPoints set Transfer Fee to new Basis Point
+    function setTransferFee(uint256 _newFeeBasisPoints) external onlyOwner {
+        if (_newFeeBasisPoints < 0 || _newFeeBasisPoints > 500)
+            revert FeeOutOfBounds();
+
+        transferFee = _newFeeBasisPoints;
+
+        emit FeeUpdated(msg.sender, _newFeeBasisPoints);
+    }
+
+    /// set new entry fee recipient
+    /// @param feeRecipient set Entry Fee Recipient
+    function setEntryFeeRecipient(address feeRecipient) external onlyOwner {
+        if (feeRecipient == address(this)) revert InvalidFeeRecipient();
+
+        entryFeeTreasury = payable(feeRecipient);
+
+        emit TreasuryUpdated(msg.sender, feeRecipient);
+    }
+
+    /// set new exit fee recipient
+    /// @param feeRecipient set Exit Fee Recipient
+    function setExitFeeRecipient(address feeRecipient) external onlyOwner {
+        if (feeRecipient == address(this)) revert InvalidFeeRecipient();
+        exitFeeTreasury = payable(feeRecipient);
+
+        emit TreasuryUpdated(msg.sender, feeRecipient);
+    }
+
+    /// set new transfer fee recipient
+    /// @param feeRecipient set Transfer Fee Recipient
+    function setTransferFeeRecipient(address feeRecipient) external onlyOwner {
+        if (feeRecipient == address(this)) revert InvalidFeeRecipient();
+        transferFeeTreasury = payable(feeRecipient);
+
+        emit TreasuryUpdated(msg.sender, feeRecipient);
+    }
+
+    /// This is to get incorrectly sent tokens out of the contract
+    /// @param _token token contract of the tokens to be withdrawn
+    /// @param _recipient address to transfer to
+    /// @param _amount amount to withdraw
+    function rescueToken(
+        address _token,
+        address _recipient,
+        uint256 _amount
     ) external onlyOwner {
-        require(
-            _newEntryFeeBasisPoints >= 0 && _newEntryFeeBasisPoints <= 500,
-            "Invalid fee"
-        );
-        entryFeeBasisPoints = _newEntryFeeBasisPoints;
+        if (_token == asset()) revert RescueUnderlying();
+
+        IERC20(_token).transfer(_recipient, _amount);
     }
 
-    function setExitFeeBasisPoints(
-        uint256 _newExitFeeBasisPoints
-    ) external onlyOwner {
-        require(
-            _newExitFeeBasisPoints >= 0 && _newExitFeeBasisPoints <= 500,
-            "Invalid fee"
-        );
-        exitFeeBasisPoints = _newExitFeeBasisPoints;
+    /// This is to get incorrectly sent Native currency out of the contract
+    /// @param _recipient receiver of the Native currency
+    function rescueNative(address _recipient) external onlyOwner {
+        uint256 amount = address(this).balance;
+        payable(_recipient).transfer(amount);
     }
 
-    function setTransferFeeBasisPoints(
-        uint256 _newTransferFeeBasisPoints
-    ) external onlyOwner {
-        require(
-            _newTransferFeeBasisPoints >= 0 &&
-                _newTransferFeeBasisPoints <= 500,
-            "Invalid fee"
-        );
-        transferFeeBasisPoints = _newTransferFeeBasisPoints;
-    }
-
-    function setEntryFeeRecipient(
-        address entryFeeRecipient
-    ) external onlyOwner {
-        entryFeeTreasury = payable(entryFeeRecipient);
-    }
-
-    function setExitFeeRecipient(address exitFeeRecipient) external onlyOwner {
-        exitFeeTreasury = payable(exitFeeRecipient);
-    }
-
-    function setTransferFeeRecipient(
-        address transferFeeRecipient
-    ) external onlyOwner {
-        transferFeeTreasury = payable(transferFeeRecipient);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                          INTERNAL HOOKS LOGIC
-    //////////////////////////////////////////////////////////////*/
-
-    function afterDeposit(uint256 assets, uint256 shares) internal virtual {}
-
-    function beforeWithdraw(uint256 assets, uint256 shares) internal virtual {}
+    // Fallback function to accept Native currency.
+    receive() external payable {}
 }

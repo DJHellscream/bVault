@@ -7,7 +7,7 @@
 const hre = require("hardhat");
 
 async function main() {
-  const [owner, treasuryAddress, depositor1, depositor2, depositor3] = await ethers.getSigners();
+  const [owner, treasuryAddress, depositor1, depositor2, depositor3, depositor4, depositor5] = await ethers.getSigners();
 
   const susqContract = await ethers.deployContract("SusieQ");
 
@@ -20,16 +20,27 @@ async function main() {
   const susqAddress = await susqContract.getAddress();
 
   const d1Amount = ethers.parseEther("100");
-  const d2Amount = ethers.parseEther("105");
+  const d2Amount = ethers.parseEther("100");
+  const d3Amount = ethers.parseEther("100");
+  const d4Amount = ethers.parseEther("100");
   await susqContract.transfer(depositor1, d1Amount);
   await susqContract.transfer(depositor2, d2Amount);
+  await susqContract.transfer(depositor3, d3Amount);
+  await susqContract.transfer(depositor4, d4Amount);
 
   await susqContract.connect(depositor1).approve(vaultContract, d1Amount);
   await vaultContract.connect(depositor1).deposit(d1Amount, depositor1);
 
-  const amountApprovedMint = await vaultContract.previewMint(d1Amount);
-  await susqContract.connect(depositor2).approve(vaultContract, amountApprovedMint);
-  await vaultContract.connect(depositor2).mint(d1Amount, depositor2);
+  await susqContract.connect(depositor2).approve(vaultContract, d2Amount);
+  await vaultContract.connect(depositor2).deposit(d2Amount, depositor2);
+
+  // await susqContract.connect(depositor3).approve(vaultContract, d3Amount);
+  // await vaultContract.connect(depositor3).deposit(d3Amount, depositor3);
+
+  // console.log("Deposit 100,000 tokens into Vault");
+  // await susqContract.transfer(vaultContract, ethers.parseEther("100000"));
+
+  // await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
 
   console.log(`KimboSchool Deployed at ${await vaultContract.getAddress()}`);
   console.log(`SusieQ Deployed at ${await susqContract.getAddress()}`);
@@ -41,6 +52,16 @@ async function main() {
   console.log(`depositor2 Address as ${await depositor2.getAddress()}`);
   console.log(`depositor2 SusQBalance at ${await susqContract.balanceOf(depositor2)}`);
   console.log(`depositor2 xSusQBalance at ${await vaultContract.balanceOf(depositor2)}`);
+  // console.log(`depositor3 Address as ${await depositor3.getAddress()}`);
+  // console.log(`depositor3 SusQBalance at ${await susqContract.balanceOf(depositor3)}`);
+  // console.log(`depositor3 xSusQBalance at ${await vaultContract.balanceOf(depositor3)}`);
+  // console.log(`depositor4 Address as ${await depositor4.getAddress()}`);
+  // console.log(`depositor4 SusQBalance at ${await susqContract.balanceOf(depositor4)}`);
+  // console.log(`depositor4 xSusQBalance at ${await vaultContract.balanceOf(depositor4)}`);
+  // console.log(`depositor5 Address as ${await depositor5.getAddress()}`);
+  // console.log(`depositor5 SusQBalance at ${await susqContract.balanceOf(depositor5)}`);
+  // console.log(`depositor5 xSusQBalance at ${await vaultContract.balanceOf(depositor5)}`);
+  console.log(`treasury xSusQBalance at ${await vaultContract.balanceOf(treasuryAddress)}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

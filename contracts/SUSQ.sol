@@ -6,6 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract SusieQ is ERC20 {
     constructor() ERC20("SusieQ", "SUSQ") {
-        _mint(msg.sender, 1000000 * (10 ** decimals()));
+        _mint(msg.sender, 1000000000 * (10 ** decimals()));
     }
 }
