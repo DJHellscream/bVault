@@ -21,9 +21,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @custom:security-contact @therealbifkn
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @notice address for fees
-    address payable public feeTreasury;
+    address public entryFeeTreasury;
     /// @notice address for transfer fees
-    address payable public transferFeeTreasury;
+    address public transferFeeTreasury;
+    /// @notice address for transfer fees
+    address public exitFeeTreasury;
     /// @notice fee for deposit/mint in basis points
     uint256 public entryFee = 300;
     /// @notice fee for withdraw/redeem in basis points
@@ -56,28 +58,44 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     /// Event for when of the fee recipient addresses is updated
     /// @param caller caller (should be owner)
-    /// @param newFeeRecipient new entry fee recipient address
-    event TreasuryUpdated(address indexed caller, address newFeeRecipient);
+    /// @param newEntryFeeRecipient new entry fee recipient address
+    /// @param newExitFeeRecipient new exit fee recipient address
+    /// @param newTransferFeeRecipient new transfer fee recipient address
+    event TreasuryUpdated(
+        address indexed caller,
+        address newEntryFeeRecipient,
+        address newExitFeeRecipient,
+        address newTransferFeeRecipient
+    );
 
     /// Constructor
     /// @param _asset Underlying ERC20 asset
-    /// @param treasuryAddress initial address for fee recipient
+    /// @param _entryFeeAddress initial address for fee recipient
+    /// @param _exitFeeAddress initial address for fee recipient
+    /// @param _transferFeeAddress initial address for fee recipient
     constructor(
         IERC20 _asset,
-        address treasuryAddress,
-        address transferFeeAddress
+        address _entryFeeAddress,
+        address _exitFeeAddress,
+        address _transferFeeAddress
     )
         ERC4626(_asset)
         ERC20("Kimbo School", "gKimbo")
         ERC20Permit("Kimbo School")
     {
-        feeTreasury = payable(treasuryAddress);
-        transferFeeTreasury = payable(transferFeeAddress);
+        entryFeeTreasury = _entryFeeAddress;
+        exitFeeTreasury = _exitFeeAddress;
+        transferFeeTreasury = _transferFeeAddress;
 
         /// Exempt treasury for initial distribution to TraderJoe LP
-        isTransferFeeExempt[treasuryAddress] = true;
+        isTransferFeeExempt[_transferFeeAddress] = true;
 
-        emit TreasuryUpdated(msg.sender, treasuryAddress);
+        emit TreasuryUpdated(
+            msg.sender,
+            _entryFeeAddress,
+            _exitFeeAddress,
+            _transferFeeAddress
+        );
     }
 
     function _entryFeeBasisPoints() internal view override returns (uint256) {
@@ -97,22 +115,29 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         return transferFee;
     }
 
-    function _feeRecipient() internal view override returns (address) {
-        return feeTreasury;
+    function _entryFeeRecipient() internal view override returns (address) {
+        return entryFeeTreasury;
     }
 
     function _transferFeeRecipient() internal view override returns (address) {
         return transferFeeTreasury;
     }
 
+    function _exitFeeRecipient() internal view override returns (address) {
+        return exitFeeTreasury;
+    }
+
+    /// Used to set an address exempt from transfer fees
+    /// @param _address address to set
+    /// @param _isExempt whether or not that address is exempt
     function setTransferFeeExempt(
         address _address,
-        bool isExempt
+        bool _isExempt
     ) external onlyOwner {
         if (_address == address(0) || _address == BURN_ADDRESS)
             revert InvalidExemptAddress();
 
-        isTransferFeeExempt[_address] = isExempt;
+        isTransferFeeExempt[_address] = _isExempt;
     }
 
     /// @dev Set fees for entry, exit, and transfer. These all need to be in basis points. e.g. 100 = 1%
@@ -124,9 +149,10 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         uint256 _exitFee,
         uint256 _transferFee
     ) external onlyOwner {
-        if (_entryFee < 0 || _entryFee > 500) revert FeeOutOfRange();
-        if (_exitFee < 0 || _exitFee > 500) revert FeeOutOfRange();
-        if (_transferFee < 0 || _transferFee > 75) revert FeeOutOfRange();
+        if (_entryFee < 0 || _exitFee < 0 || _transferFee < 0)
+            revert FeeOutOfRange();
+        if (_entryFee > 500 || _exitFee > 500 || _transferFee > 75)
+            revert FeeOutOfRange();
 
         entryFee = _entryFee;
         exitFee = _exitFee;
@@ -135,25 +161,26 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(_msgSender(), _entryFee, _exitFee, _transferFee);
     }
 
-    /// @dev Set new recipient for fees on entry, exit, and transfer. Can not be this contract
-    /// @param _newFeeRecipient New fee recipient
-    function setFeeRecipient(address _newFeeRecipient) external onlyOwner {
-        if (_newFeeRecipient == address(this)) revert InvalidFeeRecipient();
-
-        feeTreasury = payable(_newFeeRecipient);
-
-        emit TreasuryUpdated(_msgSender(), _newFeeRecipient);
-    }
-
-    function setTransferFeeRecipient(
-        address _newTransferFeeRecipient
+    /// Change recipients of the fees
+    /// @param _entry new entry fee recipient
+    /// @param _exit new exit fee recipient
+    /// @param _transfer new transfer fee recipient
+    function setFeeRecipients(
+        address _entry,
+        address _exit,
+        address _transfer
     ) external onlyOwner {
-        if (_newTransferFeeRecipient == address(this))
-            revert InvalidFeeRecipient();
+        if (
+            _entry == address(this) ||
+            _exit == address(this) ||
+            _transfer == address(this)
+        ) revert InvalidFeeRecipient();
 
-        transferFeeTreasury = payable(_newTransferFeeRecipient);
+        entryFeeTreasury = _entry;
+        exitFeeTreasury = _exit;
+        transferFeeTreasury = _transfer;
 
-        emit TreasuryUpdated(_msgSender(), _newTransferFeeRecipient);
+        emit TreasuryUpdated(_msgSender(), _entry, _exit, _transfer);
     }
 
     /// @dev This is to get incorrectly sent tokens out of the contract

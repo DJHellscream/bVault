@@ -176,7 +176,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 shares
     ) internal virtual override {
         uint256 fee = _feeOnTotal(assets, _entryFeeBasisPoints());
-        address recipient = _feeRecipient();
+        address recipient = _entryFeeRecipient();
 
         super._deposit(caller, receiver, assets, shares);
 
@@ -194,7 +194,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 shares
     ) internal virtual override {
         uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
-        address recipient = _feeRecipient();
+        address recipient = _exitFeeRecipient();
 
         super._withdraw(caller, receiver, owner, assets, shares);
 
@@ -223,11 +223,15 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return 0; // replace with e.g. 100 for 1%
     }
 
-    function _feeRecipient() internal view virtual returns (address) {
+    function _entryFeeRecipient() internal view virtual returns (address) {
         return address(0); // replace with e.g. a treasury address
     }
 
     function _transferFeeRecipient() internal view virtual returns (address) {
+        return address(0);
+    }
+
+    function _exitFeeRecipient() internal view virtual returns (address) {
         return address(0);
     }
 
