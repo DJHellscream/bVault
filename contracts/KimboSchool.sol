@@ -20,14 +20,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @author @therealbifkn
 /// @custom:security-contact @therealbifkn
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
-    /// @notice address for entry fees
-    address payable public entryFeeTreasury;
-    /// @notice address for exit fees
-    address payable public exitFeeTreasury;
-    /// @notice address for transfer fees
-    address payable public transferFeeTreasury;
-    /// @notice exempt address for initial distribution
-    mapping(address => bool) isFeeExempt;
+    /// @notice address for fees
+    address payable public feeTreasury;
     /// @notice fee for deposit/mint in basis points
     uint256 public entryFee = 300;
     /// @notice fee for withdraw/redeem in basis points
@@ -43,6 +37,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     error RescueUnderlying();
     /// @dev can't acccept native transfer
     error NativeNotAllowed();
+    /// @dev burn address can't be exempt
+    error InvalidExemptAddress();
 
     /// Event for when fees are updated - all in basis points
     /// @param caller caller (should be owner)
@@ -58,15 +54,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     /// Event for when of the fee recipient addresses is updated
     /// @param caller caller (should be owner)
-    /// @param newEntryFeeRecipient new entry fee recipient address
-    /// @param newExitFeeRecipient new exit fee recipient address
-    /// @param newTransferFeeRecipient new transfer fee recipient address
-    event TreasuryUpdated(
-        address indexed caller,
-        address newEntryFeeRecipient,
-        address newExitFeeRecipient,
-        address newTransferFeeRecipient
-    );
+    /// @param newFeeRecipient new entry fee recipient address
+    event TreasuryUpdated(address indexed caller, address newFeeRecipient);
 
     /// Constructor
     /// @param _asset Underlying ERC20 asset
@@ -79,19 +68,12 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         ERC20("Kimbo School", "gKimbo")
         ERC20Permit("Kimbo School")
     {
-        entryFeeTreasury = payable(treasuryAddress);
-        exitFeeTreasury = payable(treasuryAddress);
-        transferFeeTreasury = payable(treasuryAddress);
+        feeTreasury = payable(treasuryAddress);
 
         /// Exempt treasury for initial distribution to TraderJoe LP
-        isFeeExempt[treasuryAddress] = true;
+        isTransferFeeExempt[treasuryAddress] = true;
 
-        emit TreasuryUpdated(
-            msg.sender,
-            treasuryAddress,
-            treasuryAddress,
-            treasuryAddress
-        );
+        emit TreasuryUpdated(msg.sender, treasuryAddress);
     }
 
     function _entryFeeBasisPoints() internal view override returns (uint256) {
@@ -108,19 +90,21 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         override
         returns (uint256)
     {
-        return isFeeExempt[_msgSender()] ? 0 : transferFee;
+        return transferFee;
     }
 
-    function _entryFeeRecipient() internal view override returns (address) {
-        return entryFeeTreasury;
+    function _feeRecipient() internal view override returns (address) {
+        return feeTreasury;
     }
 
-    function _exitFeeRecipient() internal view override returns (address) {
-        return exitFeeTreasury;
-    }
+    function setTransferFeeExempt(
+        address _address,
+        bool isExempt
+    ) external onlyOwner {
+        if (_address == address(0) || _address == BURN_ADDRESS)
+            revert InvalidExemptAddress();
 
-    function _transferFeeRecipient() internal view override returns (address) {
-        return transferFeeTreasury;
+        isTransferFeeExempt[_address] = isExempt;
     }
 
     /// @dev Set fees for entry, exit, and transfer. These all need to be in basis points. e.g. 100 = 1%
@@ -143,31 +127,14 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         emit FeeUpdated(_msgSender(), _entryFee, _exitFee, _transferFee);
     }
 
-    /// @dev Set new recipients for fees on entry,exit, and transfer. Can not be this contract
-    /// @param _newEntryFeeRecipient New entry fee recipient
-    /// @param _newExitFeeRecipient New exit fee recipient
-    /// @param _newTransferFeeRecipient New transfer fee recipient
-    function setFeeRecipients(
-        address _newEntryFeeRecipient,
-        address _newExitFeeRecipient,
-        address _newTransferFeeRecipient
-    ) external onlyOwner {
-        if (_newEntryFeeRecipient == address(this))
-            revert InvalidFeeRecipient();
-        if (_newExitFeeRecipient == address(this)) revert InvalidFeeRecipient();
-        if (_newTransferFeeRecipient == address(this))
-            revert InvalidFeeRecipient();
+    /// @dev Set new recipient for fees on entry, exit, and transfer. Can not be this contract
+    /// @param _newFeeRecipient New fee recipient
+    function setFeeRecipient(address _newFeeRecipient) external onlyOwner {
+        if (_newFeeRecipient == address(this)) revert InvalidFeeRecipient();
 
-        entryFeeTreasury = payable(_newEntryFeeRecipient);
-        exitFeeTreasury = payable(_newExitFeeRecipient);
-        transferFeeTreasury = payable(_newTransferFeeRecipient);
+        feeTreasury = payable(_newFeeRecipient);
 
-        emit TreasuryUpdated(
-            _msgSender(),
-            _newEntryFeeRecipient,
-            _newExitFeeRecipient,
-            _newTransferFeeRecipient
-        );
+        emit TreasuryUpdated(_msgSender(), _newFeeRecipient);
     }
 
     /// @dev This is to get incorrectly sent tokens out of the contract

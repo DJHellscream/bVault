@@ -21,10 +21,8 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     address internal constant BURN_ADDRESS =
         0x000000000000000000000000000000000000dEaD;
     uint256 private constant BURN_FEE = 25;
-
-    /// Event to track amount burned via transfers
-    /// @param amount amount burned
-    event Burn(uint256 amount);
+    /// @notice addresses exempt from transfer fees
+    mapping(address => bool) isTransferFeeExempt;
 
     // === Overrides ===
 
@@ -120,19 +118,21 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         uint256 burnFee = _feeOnTotal(value, BURN_FEE);
-        address recipient = _transferFeeRecipient();
-        // Always reduce burnFee
-        uint256 amount = value - burnFee;
+        address recipient = _feeRecipient();
+        uint256 amount = value;
+        bool exempt = isTransferFeeExempt[_msgSender()] ||
+            isTransferFeeExempt[to];
 
-        // Burn .25% of all transfers
-        super.transfer(BURN_ADDRESS, burnFee);
+        if (!exempt) {
+            // Burn .25% of all transfers
+            super._burn(_msgSender(), burnFee);
+            amount -= burnFee;
 
-        emit Burn(burnFee);
+            if (fee > 0 && recipient != address(this)) {
+                super.transfer(recipient, fee);
 
-        if (fee > 0 && recipient != address(this)) {
-            super.transfer(recipient, fee);
-
-            amount -= fee;
+                amount -= fee;
+            }
         }
 
         return super.transfer(to, amount);
@@ -149,19 +149,20 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         uint256 burnFee = _feeOnTotal(value, BURN_FEE);
-        address recipient = _transferFeeRecipient();
-        // Always reduce burnFee
-        uint256 amount = value - burnFee;
+        address recipient = _feeRecipient();
+        uint256 amount = value;
+        bool exempt = isTransferFeeExempt[from] || isTransferFeeExempt[to];
 
-        // Burn .25% of all transfers
-        super.transfer(BURN_ADDRESS, burnFee);
+        if (!exempt) {
+            // Burn .25% of all transfers
+            _burn(from, burnFee);
+            amount -= burnFee;
 
-        emit Burn(burnFee);
+            if (fee > 0 && recipient != address(this)) {
+                super.transferFrom(from, recipient, fee);
 
-        if (fee > 0 && recipient != address(this)) {
-            super.transferFrom(from, recipient, fee);
-
-            amount -= fee;
+                amount -= fee;
+            }
         }
 
         return super.transferFrom(from, to, amount);
@@ -175,7 +176,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 shares
     ) internal virtual override {
         uint256 fee = _feeOnTotal(assets, _entryFeeBasisPoints());
-        address recipient = _entryFeeRecipient();
+        address recipient = _feeRecipient();
 
         super._deposit(caller, receiver, assets, shares);
 
@@ -193,7 +194,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         uint256 shares
     ) internal virtual override {
         uint256 fee = _feeOnRaw(assets, _exitFeeBasisPoints());
-        address recipient = _exitFeeRecipient();
+        address recipient = _feeRecipient();
 
         super._withdraw(caller, receiver, owner, assets, shares);
 
@@ -222,15 +223,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
         return 0; // replace with e.g. 100 for 1%
     }
 
-    function _entryFeeRecipient() internal view virtual returns (address) {
-        return address(0); // replace with e.g. a treasury address
-    }
-
-    function _exitFeeRecipient() internal view virtual returns (address) {
-        return address(0); // replace with e.g. a treasury address
-    }
-
-    function _transferFeeRecipient() internal view virtual returns (address) {
+    function _feeRecipient() internal view virtual returns (address) {
         return address(0); // replace with e.g. a treasury address
     }
 
