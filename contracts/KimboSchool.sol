@@ -22,6 +22,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @notice address for fees
     address payable public feeTreasury;
+    /// @notice address for transfer fees
+    address payable public transferFeeTreasury;
     /// @notice fee for deposit/mint in basis points
     uint256 public entryFee = 300;
     /// @notice fee for withdraw/redeem in basis points
@@ -62,13 +64,15 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @param treasuryAddress initial address for fee recipient
     constructor(
         IERC20 _asset,
-        address treasuryAddress
+        address treasuryAddress,
+        address transferFeeAddress
     )
         ERC4626(_asset)
         ERC20("Kimbo School", "gKimbo")
         ERC20Permit("Kimbo School")
     {
         feeTreasury = payable(treasuryAddress);
+        transferFeeTreasury = payable(transferFeeAddress);
 
         /// Exempt treasury for initial distribution to TraderJoe LP
         isTransferFeeExempt[treasuryAddress] = true;
@@ -95,6 +99,10 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
 
     function _feeRecipient() internal view override returns (address) {
         return feeTreasury;
+    }
+
+    function _transferFeeRecipient() internal view override returns (address) {
+        return transferFeeTreasury;
     }
 
     function setTransferFeeExempt(
@@ -135,6 +143,17 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         feeTreasury = payable(_newFeeRecipient);
 
         emit TreasuryUpdated(_msgSender(), _newFeeRecipient);
+    }
+
+    function setTransferFeeRecipient(
+        address _newTransferFeeRecipient
+    ) external onlyOwner {
+        if (_newTransferFeeRecipient == address(this))
+            revert InvalidFeeRecipient();
+
+        transferFeeTreasury = payable(_newTransferFeeRecipient);
+
+        emit TreasuryUpdated(_msgSender(), _newTransferFeeRecipient);
     }
 
     /// @dev This is to get incorrectly sent tokens out of the contract

@@ -118,7 +118,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         uint256 burnFee = _feeOnTotal(value, BURN_FEE);
-        address recipient = _feeRecipient();
+        address recipient = _transferFeeRecipient();
         uint256 amount = value;
         bool exempt = isTransferFeeExempt[_msgSender()] ||
             isTransferFeeExempt[to];
@@ -149,7 +149,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     ) public virtual override(ERC20, IERC20) returns (bool) {
         uint256 fee = _feeOnTotal(value, _transferFeeBasisPoints());
         uint256 burnFee = _feeOnTotal(value, BURN_FEE);
-        address recipient = _feeRecipient();
+        address recipient = _transferFeeRecipient();
         uint256 amount = value;
         bool exempt = isTransferFeeExempt[from] || isTransferFeeExempt[to];
 
@@ -225,6 +225,10 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
 
     function _feeRecipient() internal view virtual returns (address) {
         return address(0); // replace with e.g. a treasury address
+    }
+
+    function _transferFeeRecipient() internal view virtual returns (address) {
+        return address(0);
     }
 
     // === Fee operations ===
