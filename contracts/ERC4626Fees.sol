@@ -204,7 +204,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
 
         // If there are no more vault tokens then remove any dust from contract
         // otherwise it's possible no more vault tokens could be issued.
-        if (totalSupply() < 1) {
+        if (totalSupply() <= 1 ** 3) {
             SafeERC20.safeTransfer(IERC20(asset()), recipient, totalAssets());
         }
     }
