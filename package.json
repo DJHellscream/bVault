@@ -3,7 +3,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.4",
-    "hardhat": "^2.19.5"
+    "hardhat": "^2.20.1"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.3",

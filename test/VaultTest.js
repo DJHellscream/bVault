@@ -15,7 +15,7 @@ describe("Market", function () {
 
     await susqContract.waitForDeployment();
 
-    const vaultContract = await ethers.deployContract("KimboSchool", [susqContract, treasuryAddress, treasuryAddress]);
+    const vaultContract = await ethers.deployContract("KimboSchool", [susqContract, treasuryAddress, treasuryAddress, treasuryAddress]);
     await vaultContract.waitForDeployment();
 
     const vaultAddress = await vaultContract.getAddress();
@@ -92,7 +92,7 @@ describe("Market", function () {
       console.log("total xSusQ: %d", await vaultContract.totalSupply());
       console.log("treasuryBalance before withdraw: %d", await susqContract.balanceOf(treasuryAddress));
       const rewards1 = await vaultContract.connect(depositor1).redeem(shares1, depositor1, depositor1);
-      
+
       // const rewards2 = await vaultContract.connect(depositor2).redeem(shares2, depositor2, depositor2);
       console.log("vaultBalance - SusQ after Withdraw: %d", await susqContract.balanceOf(vaultAddress));
       console.log("depositor1Balance SusQ after withdraw: %d", await susqContract.balanceOf(depositor1));
