@@ -4,7 +4,7 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const hre = require("hardhat");
+const { hre } = require("hardhat");
 
 async function main() {
   const [owner, treasuryAddress, depositor1, depositor2, depositor3, depositor4, depositor5] = await ethers.getSigners();
@@ -13,7 +13,7 @@ async function main() {
 
   await susqContract.waitForDeployment();
 
-  const vaultContract = await ethers.deployContract("KimboSchool", [susqContract, treasuryAddress, treasuryAddress]);
+  const vaultContract = await ethers.deployContract("KimboSchool", [susqContract, treasuryAddress, treasuryAddress, treasuryAddress]);
   await vaultContract.waitForDeployment();
 
   const vaultAddress = await vaultContract.getAddress();
@@ -38,9 +38,9 @@ async function main() {
   // await vaultContract.connect(depositor3).deposit(d3Amount, depositor3);
 
   // console.log("Deposit 100,000 tokens into Vault");
-  // await susqContract.transfer(vaultContract, ethers.parseEther("100000"));
+  await susqContract.transfer(vaultContract, ethers.parseEther("2"));
 
-  await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
+  //await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
 
   console.log(`KimboSchool Deployed at ${await vaultContract.getAddress()}`);
   console.log(`SusieQ Deployed at ${await susqContract.getAddress()}`);
@@ -58,10 +58,14 @@ async function main() {
   // console.log(`depositor4 Address as ${await depositor4.getAddress()}`);
   // console.log(`depositor4 SusQBalance at ${await susqContract.balanceOf(depositor4)}`);
   // console.log(`depositor4 xSusQBalance at ${await vaultContract.balanceOf(depositor4)}`);
-  console.log(`depositor5 Address as ${await depositor5.getAddress()}`);
-  console.log(`depositor5 SusQBalance at ${await susqContract.balanceOf(depositor5)}`);
-  console.log(`depositor5 xSusQBalance at ${await vaultContract.balanceOf(depositor5)}`);
+  // console.log(`depositor5 Address as ${await depositor5.getAddress()}`);
+  // console.log(`depositor5 SusQBalance at ${await susqContract.balanceOf(depositor5)}`);
+  // console.log(`depositor5 xSusQBalance at ${await vaultContract.balanceOf(depositor5)}`);
+  console.log(`vault SusQBalance at ${await vaultContract.totalAssets()}`);
+  console.log(`xSusQ value at ${await vaultContract.totalAssets()} ${await vaultContract.totalSupply()}`);
   console.log(`treasury xSusQBalance at ${await vaultContract.balanceOf(treasuryAddress)}`);
+  console.log(`previewRedeem ${await vaultContract.previewRedeem(await vaultContract.balanceOf(depositor1))}`);
+  console.log(`maxWithdraw ${await vaultContract.maxWithdraw(depositor1)}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

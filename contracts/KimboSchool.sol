@@ -27,7 +27,7 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     /// @notice address for transfer fees
     address public exitFeeTreasury;
     /// @notice fee for deposit/mint in basis points
-    uint256 public entryFee = 300;
+    uint256 public entryFee = 100;
     /// @notice fee for withdraw/redeem in basis points
     uint256 public exitFee = 100;
     /// @notice fee on transfer in basis points

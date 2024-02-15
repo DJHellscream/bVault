@@ -1,15 +1,12 @@
 {
   "name": "hardhat-project",
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.4",
-    "ethers": "^6.1.0",
     "hardhat": "^2.19.5"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.3",
-    "@openzeppelin/contracts": "^5.0.1",
-    "@thirdweb-dev/contracts": "^3.11.0"
+    "@openzeppelin/contracts": "^5.0.1"
   }
 }
