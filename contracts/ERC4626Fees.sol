@@ -212,27 +212,27 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
     // === Fee configuration ===
 
     function _entryFeeBasisPoints() internal view virtual returns (uint256) {
-        //return 0; // replace with e.g. 100 for 1%
+        return 0; // replace with e.g. 100 for 1%
     }
 
     function _exitFeeBasisPoints() internal view virtual returns (uint256) {
-        //return 0; // replace with e.g. 100 for 1%
+        return 0; // replace with e.g. 100 for 1%
     }
 
     function _transferFeeBasisPoints() internal view virtual returns (uint256) {
-        //return 0; // replace with e.g. 100 for 1%
+        return 0; // replace with e.g. 100 for 1%
     }
 
     function _entryFeeRecipient() internal view virtual returns (address) {
-        //return address(0); // replace with e.g. a treasury address
+        return address(0); // replace with e.g. a treasury address
     }
 
     function _transferFeeRecipient() internal view virtual returns (address) {
-        //return address(0);
+        return address(0);
     }
 
     function _exitFeeRecipient() internal view virtual returns (address) {
-        //return address(0);
+        return address(0);
     }
 
     // === Fee operations ===
