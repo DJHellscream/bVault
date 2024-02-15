@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.18;
 
 // ▄    ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄
 //▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░▌ ▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌
@@ -69,32 +69,35 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     );
 
     /// Constructor
-    /// @param _asset Underlying ERC20 asset
-    /// @param _entryFeeAddress initial address for fee recipient
-    /// @param _exitFeeAddress initial address for fee recipient
-    /// @param _transferFeeAddress initial address for fee recipient
+    /// @param underlyingAsset Underlying ERC20 asset
+    /// @param entryFeeAddress initial address for fee recipient
+    /// @param exitFeeAddress initial address for fee recipient
+    /// @param transferFeeAddress initial address for fee recipient
     constructor(
-        IERC20 _asset,
-        address _entryFeeAddress,
-        address _exitFeeAddress,
-        address _transferFeeAddress
+        IERC20 underlyingAsset,
+        address entryFeeAddress,
+        address exitFeeAddress,
+        address transferFeeAddress
     )
-        ERC4626(_asset)
+        ERC4626(underlyingAsset)
         ERC20("Kimbo School", "gKimbo")
         ERC20Permit("Kimbo School")
     {
-        entryFeeTreasury = _entryFeeAddress;
-        exitFeeTreasury = _exitFeeAddress;
-        transferFeeTreasury = _transferFeeAddress;
+        require(entryFeeAddress != address(0));
+        require(exitFeeAddress != address(0));
+        require(transferFeeAddress != address(0));
+        entryFeeTreasury = entryFeeAddress;
+        exitFeeTreasury = exitFeeAddress;
+        transferFeeTreasury = transferFeeAddress;
 
         /// Exempt treasury for initial distribution to TraderJoe LP
-        isTransferFeeExempt[_transferFeeAddress] = true;
+        isTransferFeeExempt[transferFeeAddress] = true;
 
         emit TreasuryUpdated(
             msg.sender,
-            _entryFeeAddress,
-            _exitFeeAddress,
-            _transferFeeAddress
+            entryFeeAddress,
+            exitFeeAddress,
+            transferFeeAddress
         );
     }
 
@@ -128,73 +131,76 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
     }
 
     /// Used to set an address exempt from transfer fees
-    /// @param _address address to set
-    /// @param _isExempt whether or not that address is exempt
+    /// @param addressToChange address to modify the exempt status of
+    /// @param isExempt whether or not that address is exempt
     function setTransferFeeExempt(
-        address _address,
-        bool _isExempt
+        address addressToChange,
+        bool isExempt
     ) external onlyOwner {
-        if (_address == address(0) || _address == BURN_ADDRESS)
+        if (addressToChange == address(0) || addressToChange == BURN_ADDRESS)
             revert InvalidExemptAddress();
 
-        isTransferFeeExempt[_address] = _isExempt;
+        isTransferFeeExempt[addressToChange] = isExempt;
     }
 
     /// @dev Set fees for entry, exit, and transfer. These all need to be in basis points. e.g. 100 = 1%
-    /// @param _entryFee new fee for deposit/mint
-    /// @param _exitFee new fee for redeem/withdraw
-    /// @param _transferFee new fee for transfers
+    /// @param newEntryFee new fee for deposit/mint
+    /// @param newExitFee new fee for redeem/withdraw
+    /// @param newTransferFee new fee for transfers
     function setFees(
-        uint256 _entryFee,
-        uint256 _exitFee,
-        uint256 _transferFee
+        uint256 newEntryFee,
+        uint256 newExitFee,
+        uint256 newTransferFee
     ) external onlyOwner {
-        if (_entryFee < 0 || _exitFee < 0 || _transferFee < 0)
-            revert FeeOutOfRange();
-        if (_entryFee > 500 || _exitFee > 500 || _transferFee > 75)
+        if (newEntryFee > 500 || newExitFee > 500 || newTransferFee > 75)
             revert FeeOutOfRange();
 
-        entryFee = _entryFee;
-        exitFee = _exitFee;
-        transferFee = _transferFee;
+        entryFee = newEntryFee;
+        exitFee = newExitFee;
+        transferFee = newTransferFee;
 
-        emit FeeUpdated(_msgSender(), _entryFee, _exitFee, _transferFee);
+        emit FeeUpdated(_msgSender(), newEntryFee, newExitFee, newTransferFee);
     }
 
     /// Change recipients of the fees
-    /// @param _entry new entry fee recipient
-    /// @param _exit new exit fee recipient
-    /// @param _transfer new transfer fee recipient
+    /// @param newEntryAddress new entry fee recipient
+    /// @param newExitAddress new exit fee recipient
+    /// @param newTransferAddress new transfer fee recipient
     function setFeeRecipients(
-        address _entry,
-        address _exit,
-        address _transfer
+        address newEntryAddress,
+        address newExitAddress,
+        address newTransferAddress
     ) external onlyOwner {
         if (
-            _entry == address(this) ||
-            _exit == address(this) ||
-            _transfer == address(this)
+            newEntryAddress == address(this) ||
+            newExitAddress == address(this) ||
+            newTransferAddress == address(this)
         ) revert InvalidFeeRecipient();
 
-        entryFeeTreasury = _entry;
-        exitFeeTreasury = _exit;
-        transferFeeTreasury = _transfer;
+        entryFeeTreasury = newEntryAddress;
+        exitFeeTreasury = newExitAddress;
+        transferFeeTreasury = newTransferAddress;
 
-        emit TreasuryUpdated(_msgSender(), _entry, _exit, _transfer);
+        emit TreasuryUpdated(
+            _msgSender(),
+            newEntryAddress,
+            newExitAddress,
+            newTransferAddress
+        );
     }
 
     /// @dev This is to get incorrectly sent tokens out of the contract
-    /// @param _token token contract of the tokens to be withdrawn
-    /// @param _recipient address to transfer to
-    /// @param _amount amount to withdraw
+    /// @param token token contract of the tokens to be withdrawn
+    /// @param recipient address to transfer to
+    /// @param amount amount to withdraw
     function rescueToken(
-        address _token,
-        address _recipient,
-        uint256 _amount
+        address token,
+        address recipient,
+        uint256 amount
     ) external onlyOwner {
-        if (_token == asset()) revert RescueUnderlying();
+        if (token == asset()) revert RescueUnderlying();
 
-        SafeERC20.safeTransfer(IERC20(_token), _recipient, _amount);
+        SafeERC20.safeTransfer(IERC20(token), recipient, amount);
     }
 
     /// @dev Fallback function to reject Native currency.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.18;
 
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
@@ -204,7 +204,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
 
         // If there are no more vault tokens then remove any dust from contract
         // otherwise it's possible no more vault tokens could be issued.
-        if (totalSupply() == 0) {
+        if (totalSupply() < 1) {
             SafeERC20.safeTransfer(IERC20(asset()), recipient, totalAssets());
         }
     }
