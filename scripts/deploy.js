@@ -40,7 +40,7 @@ async function main() {
   // console.log("Deposit 100,000 tokens into Vault");
   await susqContract.transfer(vaultContract, ethers.parseEther("2"));
 
-  //await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
+  // await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
 
   console.log(`KimboCollege Deployed at ${await vaultContract.getAddress()}`);
   console.log(`SusieQ Deployed at ${await susqContract.getAddress()}`);

@@ -25,6 +25,16 @@ pragma solidity ^0.8.20;
 // ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
 //  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
 
+// Disclaimer:
+// x.com/kimbotrainer
+// gKIMBO is a meme coin with no intrinsic value or expectation of financial return. 
+// There is no formal team or roadmap. 
+// The coin is completely useless and for entertainment purposes only.
+
+// gKimbo will only increase in backing if $Kimbo is added to the Kimbo College contract via an external transfer. 
+// This allows for the community to seize opportunities based on their own work to increase the backing of their own tokens. 
+// It does not and should not rely solely on the dev.
+
 
 import {ERC4626Fees, IERC20, ERC4626, ERC20, ERC20Permit, SafeERC20} from "./ERC4626Fees.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
