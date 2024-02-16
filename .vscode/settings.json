@@ -1,4 +1,7 @@
 {
     "solidity.compileUsingRemoteVersion": "v0.8.20+commit.a1b79de6",
-    "sarif-viewer.connectToGithubCodeScanning": "on"
+    "sarif-viewer.connectToGithubCodeScanning": "on",
+    "github-actions.workflows.pinned.workflows": [
+        ".github/workflows/slither.yml"
+    ]
 }
