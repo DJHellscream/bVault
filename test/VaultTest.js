@@ -15,7 +15,7 @@ describe("Market", function () {
 
     await susqContract.waitForDeployment();
 
-    const vaultContract = await ethers.deployContract("KimboSchool", [susqContract, treasuryAddress, treasuryAddress, treasuryAddress]);
+    const vaultContract = await ethers.deployContract("KimboCollege", [susqContract, treasuryAddress, treasuryAddress, treasuryAddress]);
     await vaultContract.waitForDeployment();
 
     const vaultAddress = await vaultContract.getAddress();

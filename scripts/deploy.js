@@ -13,7 +13,7 @@ async function main() {
 
   await susqContract.waitForDeployment();
 
-  const vaultContract = await ethers.deployContract("KimboSchool", [susqContract, treasuryAddress, treasuryAddress, treasuryAddress]);
+  const vaultContract = await ethers.deployContract("KimboCollege", [susqContract, treasuryAddress, treasuryAddress, treasuryAddress]);
   await vaultContract.waitForDeployment();
 
   const vaultAddress = await vaultContract.getAddress();
@@ -42,7 +42,7 @@ async function main() {
 
   //await vaultContract.connect(depositor1).transfer(depositor5, await vaultContract.balanceOf(depositor1));
 
-  console.log(`KimboSchool Deployed at ${await vaultContract.getAddress()}`);
+  console.log(`KimboCollege Deployed at ${await vaultContract.getAddress()}`);
   console.log(`SusieQ Deployed at ${await susqContract.getAddress()}`);
   console.log(`owner Address as ${await owner.getAddress()}`);
   console.log(`owner Balance at ${await susqContract.balanceOf(owner)}`);

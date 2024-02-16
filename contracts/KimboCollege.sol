@@ -16,10 +16,10 @@ pragma solidity ^0.8.20;
 import {ERC4626Fees, IERC20, ERC4626, ERC20, ERC20Permit, SafeERC20} from "./ERC4626Fees.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title Kimbo School Vault
+/// @title Kimbo College Vault
 /// @author @therealbifkn
 /// @custom:security-contact @therealbifkn
-contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
+contract KimboCollege is ERC4626Fees, Ownable(msg.sender) {
     /// @notice address for fees
     address public entryFeeTreasury;
     /// @notice address for transfer fees
@@ -80,8 +80,8 @@ contract KimboSchool is ERC4626Fees, Ownable(msg.sender) {
         address transferFeeAddress
     )
         ERC4626(underlyingAsset)
-        ERC20("Kimbo School", "gKimbo")
-        ERC20Permit("Kimbo School")
+        ERC20("Kimbo College", "gKimbo")
+        ERC20Permit("Kimbo College")
     {
         require(entryFeeAddress != address(0));
         require(exitFeeAddress != address(0));

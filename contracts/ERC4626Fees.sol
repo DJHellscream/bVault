@@ -155,7 +155,7 @@ abstract contract ERC4626Fees is ERC4626, ERC20Permit, ERC20Votes {
 
         if (!exempt) {
             // Burn .25% of all transfers
-            _burn(from, burnFee);
+            super._burn(from, burnFee);
             amount -= burnFee;
 
             if (fee > 0 && recipient != address(this)) {
